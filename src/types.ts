@@ -15,7 +15,15 @@ export interface ItineraryItem {
   description: string
   type: ItemType
   mapQuery: string
+  /** Optional precise address; preferred over mapQuery for Naver Map search. */
+  address?: string
   completed: boolean
+}
+
+export function getMapSearchValue(item: Pick<ItineraryItem, 'mapQuery' | 'address'>): string {
+  const address = item.address?.trim() ?? ''
+  if (address) return address
+  return item.mapQuery.trim()
 }
 
 export interface Day {

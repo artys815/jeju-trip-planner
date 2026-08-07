@@ -1,4 +1,9 @@
-import { ITEM_TYPES, type ItineraryItem as Item, type ItemType } from '../types'
+import {
+  getMapSearchValue,
+  ITEM_TYPES,
+  type ItineraryItem as Item,
+  type ItemType,
+} from '../types'
 import { EditField } from './EditField'
 
 const TYPE_ICON: Record<ItemType, string> = {
@@ -73,6 +78,14 @@ export function ItineraryItemView({
             placeholder="예: 협재해수욕장"
           />
           <EditField
+            className="edit-field--address"
+            label="정확한 주소 (선택)"
+            value={item.address ?? ''}
+            onChange={(address) => onChange({ address })}
+            placeholder="제주특별자치도 제주시 조천읍..."
+            hint="주소가 입력되어 있으면 주소를 우선 사용하고, 없으면 기존 지도 검색어를 사용합니다."
+          />
+          <EditField
             className="edit-field--description"
             label="설명"
             value={item.description}
@@ -101,6 +114,8 @@ export function ItineraryItemView({
     )
   }
 
+  const searchValue = getMapSearchValue(item)
+
   return (
     <li className={`item ${item.completed ? 'item--done' : ''}`}>
       <div className="item__time">
@@ -112,10 +127,10 @@ export function ItineraryItemView({
       <div className="item__body">
         <div className="item__heading">
           <h4 className="item__title">{item.title}</h4>
-          {item.mapQuery.trim() && (
+          {searchValue && (
             <a
               className="item__map"
-              href={mapUrl(item.mapQuery.trim())}
+              href={mapUrl(searchValue)}
               target="_blank"
               rel="noopener noreferrer"
             >

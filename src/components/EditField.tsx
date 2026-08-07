@@ -6,6 +6,7 @@ interface EditFieldProps {
   type?: 'text' | 'time'
   placeholder?: string
   className?: string
+  hint?: string
 }
 
 export function EditField({
@@ -16,8 +17,10 @@ export function EditField({
   type = 'text',
   placeholder,
   className = '',
+  hint,
 }: EditFieldProps) {
   const id = `field-${label.replace(/\s+/g, '-')}`
+  const hintId = hint ? `${id}-hint` : undefined
   const fieldClass = ['edit-field', className].filter(Boolean).join(' ')
 
   return (
@@ -31,6 +34,7 @@ export function EditField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={3}
+          aria-describedby={hintId}
         />
       ) : (
         <input
@@ -40,7 +44,13 @@ export function EditField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          aria-describedby={hintId}
         />
+      )}
+      {hint && (
+        <span id={hintId} className="edit-field__hint">
+          {hint}
+        </span>
       )}
     </label>
   )
