@@ -520,9 +520,18 @@ a {
   font-size: 0.92rem;
 }
 
+.day-card__meta {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
 .day-card__edit-meta {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.55rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .day-card__edit-meta label {
@@ -531,11 +540,14 @@ a {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--ink-soft);
+  min-width: 0;
 }
 
 .day-card__edit-meta input,
 .edit-field__input {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid rgba(31, 42, 46, 0.14);
   border-radius: 12px;
   padding: 0.75rem 0.85rem;
@@ -547,6 +559,8 @@ a {
 .edit-field {
   display: grid;
   gap: 0.3rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .edit-field__label {
@@ -557,7 +571,8 @@ a {
 
 .edit-field__textarea {
   resize: vertical;
-  min-height: 5rem;
+  min-height: 6rem;
+  max-height: 16rem;
   line-height: 1.5;
 }
 
@@ -579,8 +594,12 @@ a {
   background: linear-gradient(180deg, #fbfaf7 0%, #f7f3ec 100%);
 }
 
-.item--edit {
-  grid-template-columns: 1fr;
+.item--edit,
+.item.item--edit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
   background: #fbfaf7;
   border: 1px dashed rgba(31, 42, 46, 0.12);
 }
@@ -639,14 +658,25 @@ a {
 
 .item__edit-grid {
   display: grid;
-  gap: 0.65rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.7rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .item__edit-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.7rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.item__edit-actions .btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.5rem;
+  white-space: nowrap;
 }
 
 /* Restaurants */
@@ -685,7 +715,15 @@ a {
 
 .restaurant-card__edit {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.restaurant-card__edit .btn {
+  width: 100%;
+  min-height: 2.5rem;
 }
 
 /* Checklist */
@@ -724,10 +762,18 @@ a {
 
 .checklist__text-input {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid rgba(31, 42, 46, 0.14);
   border-radius: 10px;
   padding: 0.55rem 0.7rem;
   background: #fff;
+}
+
+.checklist__item .btn {
+  flex: 0 0 auto;
+  min-width: 3.5rem;
+  white-space: nowrap;
 }
 
 .checklist__item.is-checked span {
@@ -781,11 +827,21 @@ a {
 
 .notice-list__edit {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.55rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .notice-list__edit .edit-field__textarea {
   background: #fff;
+  width: 100%;
+  min-width: 0;
+}
+
+.notice-list__edit .btn {
+  width: 100%;
+  min-height: 2.5rem;
 }
 
 /* Footer */
@@ -800,8 +856,8 @@ a {
   margin: 0;
 }
 
-/* Desktop */
-@media (min-width: 720px) {
+/* Tablet and up — view chrome + edit forms */
+@media (min-width: 768px) {
   .hero {
     padding: 3.2rem 1.5rem 4.2rem;
   }
@@ -832,17 +888,110 @@ a {
     grid-template-columns: 1fr 1fr;
   }
 
-  .item {
-    grid-template-columns: 5.2rem 1fr;
+  .item:not(.item--edit) {
+    grid-template-columns: 5.2rem minmax(0, 1fr);
     padding: 1rem 0.9rem;
+  }
+
+  .item.item--edit {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1rem 0.9rem;
+  }
+
+  .item__edit-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .edit-field--title,
+  .edit-field--description,
+  .edit-field--map,
+  .item__edit-actions {
+    grid-column: 1 / -1;
+  }
+
+  .item__edit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .item__edit-actions .btn {
+    width: auto;
+    min-width: 4.75rem;
+    flex: 0 0 auto;
   }
 
   .day-card__edit-meta {
     grid-template-columns: 1fr 1fr;
   }
+
+  .restaurant-card__edit {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .restaurant-card__edit .edit-field:nth-child(3),
+  .restaurant-card__edit .btn {
+    grid-column: 1 / -1;
+  }
+
+  .restaurant-card__edit .btn {
+    width: auto;
+    justify-self: start;
+    min-width: 4.75rem;
+  }
+
+  .notice-list__edit .btn {
+    width: auto;
+    justify-self: start;
+    min-width: 4.75rem;
+  }
 }
 
-@media (min-width: 900px) {
+/* Desktop — full-width itinerary item editor */
+@media (min-width: 1024px) {
+  .item__edit-grid {
+    grid-template-columns:
+      minmax(110px, 140px)
+      minmax(140px, 180px)
+      minmax(220px, 1fr)
+      minmax(220px, 1fr);
+    align-items: start;
+  }
+
+  .edit-field--time,
+  .edit-field--type,
+  .edit-field--title,
+  .edit-field--map {
+    grid-column: auto;
+  }
+
+  .edit-field--description {
+    grid-column: 1 / 4;
+  }
+
+  .item__edit-actions {
+    grid-column: 4;
+    grid-row: 2;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-self: end;
+    justify-content: flex-end;
+    align-content: flex-end;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .item__edit-actions .btn {
+    width: auto;
+    min-width: 4.75rem;
+  }
+
+  .day-card__edit-meta {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .restaurant-grid {
     grid-template-columns: 1fr 1fr 1fr;
   }

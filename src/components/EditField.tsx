@@ -5,6 +5,7 @@ interface EditFieldProps {
   multiline?: boolean
   type?: 'text' | 'time'
   placeholder?: string
+  className?: string
 }
 
 export function EditField({
@@ -14,11 +15,13 @@ export function EditField({
   multiline = false,
   type = 'text',
   placeholder,
+  className = '',
 }: EditFieldProps) {
   const id = `field-${label.replace(/\s+/g, '-')}`
+  const fieldClass = ['edit-field', className].filter(Boolean).join(' ')
 
   return (
-    <label className="edit-field" htmlFor={id}>
+    <label className={fieldClass} htmlFor={id}>
       <span className="edit-field__label">{label}</span>
       {multiline ? (
         <textarea

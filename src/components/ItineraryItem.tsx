@@ -40,11 +40,12 @@ export function ItineraryItemView({
       <li className="item item--edit">
         <div className="item__edit-grid">
           <EditField
+            className="edit-field--time"
             label="시간"
             value={item.time}
             onChange={(time) => onChange({ time })}
           />
-          <label className="edit-field">
+          <label className="edit-field edit-field--type">
             <span className="edit-field__label">유형</span>
             <select
               className="edit-field__input"
@@ -59,39 +60,42 @@ export function ItineraryItemView({
             </select>
           </label>
           <EditField
+            className="edit-field--title"
             label="제목"
             value={item.title}
             onChange={(title) => onChange({ title })}
           />
           <EditField
-            label="설명"
-            value={item.description}
-            onChange={(description) => onChange({ description })}
-            multiline
-          />
-          <EditField
+            className="edit-field--map"
             label="지도 검색어"
             value={item.mapQuery}
             onChange={(mapQuery) => onChange({ mapQuery })}
             placeholder="예: 협재해수욕장"
           />
-        </div>
-        <div className="item__edit-actions no-print">
-          <button type="button" className="btn btn--small" onClick={onMoveUp} disabled={isFirst}>
-            위로
-          </button>
-          <button type="button" className="btn btn--small" onClick={onMoveDown} disabled={isLast}>
-            아래로
-          </button>
-          <button
-            type="button"
-            className="btn btn--small btn--danger"
-            onClick={() => {
-              if (window.confirm('이 일정을 삭제할까요?')) onDelete()
-            }}
-          >
-            삭제
-          </button>
+          <EditField
+            className="edit-field--description"
+            label="설명"
+            value={item.description}
+            onChange={(description) => onChange({ description })}
+            multiline
+          />
+          <div className="item__edit-actions no-print">
+            <button type="button" className="btn btn--small" onClick={onMoveUp} disabled={isFirst}>
+              위로
+            </button>
+            <button type="button" className="btn btn--small" onClick={onMoveDown} disabled={isLast}>
+              아래로
+            </button>
+            <button
+              type="button"
+              className="btn btn--small btn--danger"
+              onClick={() => {
+                if (window.confirm('이 일정을 삭제할까요?')) onDelete()
+              }}
+            >
+              삭제
+            </button>
+          </div>
         </div>
       </li>
     )
