@@ -5,16 +5,28 @@ interface DayCardProps {
   day: Day
   dayNumber: number
   isEditing: boolean
+  isFirst: boolean
+  isLast: boolean
+  canDelete: boolean
   onChangeDay: (patch: Partial<Day>) => void
   onChangeItems: (items: ItineraryItem[]) => void
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onDelete: () => void
 }
 
 export function DayCard({
   day,
   dayNumber,
   isEditing,
+  isFirst,
+  isLast,
+  canDelete,
   onChangeDay,
   onChangeItems,
+  onMoveUp,
+  onMoveDown,
+  onDelete,
 }: DayCardProps) {
   const updateItem = (index: number, patch: Partial<ItineraryItem>) => {
     const next = day.items.map((item, i) => (i === index ? { ...item, ...patch } : item))
@@ -48,6 +60,14 @@ export function DayCard({
     ])
   }
 
+  const handleDeleteDay = () => {
+    if (!canDelete) return
+    const label = day.date.trim() || day.area.trim() || `DAY ${dayNumber}`
+    if (window.confirm(`「${label}」 날짜 일정을 삭제할까요? 이 날짜의 모든 일정도 함께 삭제됩니다.`)) {
+      onDelete()
+    }
+  }
+
   return (
     <article className={`day-card day-card--${day.accent}`}>
       <header className="day-card__header">
@@ -56,36 +76,65 @@ export function DayCard({
         </div>
         <div className="day-card__meta">
           {isEditing ? (
-            <div className="day-card__edit-meta">
-              <label>
-                <span>날짜</span>
-                <input
-                  value={day.date}
-                  onChange={(e) => onChangeDay({ date: e.target.value })}
-                />
-              </label>
-              <label>
-                <span>요일</span>
-                <input
-                  value={day.weekday}
-                  onChange={(e) => onChangeDay({ weekday: e.target.value })}
-                />
-              </label>
-              <label>
-                <span>지역</span>
-                <input
-                  value={day.area}
-                  onChange={(e) => onChangeDay({ area: e.target.value })}
-                />
-              </label>
-              <label>
-                <span>테마</span>
-                <input
-                  value={day.theme}
-                  onChange={(e) => onChangeDay({ theme: e.target.value })}
-                />
-              </label>
-            </div>
+            <>
+              <div className="day-card__edit-meta">
+                <label>
+                  <span>날짜</span>
+                  <input
+                    value={day.date}
+                    onChange={(e) => onChangeDay({ date: e.target.value })}
+                  />
+                </label>
+                <label>
+                  <span>요일</span>
+                  <input
+                    value={day.weekday}
+                    onChange={(e) => onChangeDay({ weekday: e.target.value })}
+                  />
+                </label>
+                <label>
+                  <span>지역</span>
+                  <input
+                    value={day.area}
+                    onChange={(e) => onChangeDay({ area: e.target.value })}
+                  />
+                </label>
+                <label>
+                  <span>테마</span>
+                  <input
+                    value={day.theme}
+                    onChange={(e) => onChangeDay({ theme: e.target.value })}
+                  />
+                </label>
+              </div>
+              <div className="day-card__day-actions no-print">
+                <button
+                  type="button"
+                  className="btn btn--small"
+                  onClick={onMoveUp}
+                  disabled={isFirst}
+                >
+                  이전 날짜로
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--small"
+                  onClick={onMoveDown}
+                  disabled={isLast}
+                >
+                  다음 날짜로
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--small btn--danger"
+                  onClick={handleDeleteDay}
+                  disabled={!canDelete}
+                  title={!canDelete ? '최소 하루는 남겨야 합니다' : undefined}
+                >
+                  날짜 삭제
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <p className="day-card__date">

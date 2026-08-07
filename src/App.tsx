@@ -8,6 +8,7 @@ import { Toolbar } from './components/Toolbar'
 import { TripSummary } from './components/TripSummary'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { isItinerary, type Day, type Itinerary } from './types'
+import { createNextDay } from './utils/days'
 import './styles.css'
 
 export default function App() {
@@ -26,6 +27,36 @@ export default function App() {
       ...prev,
       days: prev.days.map((day, i) => (i === dayIndex ? { ...day, ...patch } : day)),
     }))
+  }
+
+  const addDay = () => {
+    setItinerary((prev) => ({
+      ...prev,
+      days: [...prev.days, createNextDay(prev.days, prev.startDate)],
+    }))
+    setError(null)
+  }
+
+  const deleteDay = (dayIndex: number) => {
+    setItinerary((prev) => {
+      if (prev.days.length <= 1) return prev
+      return {
+        ...prev,
+        days: prev.days.filter((_, i) => i !== dayIndex),
+      }
+    })
+    setError(null)
+  }
+
+  const moveDay = (dayIndex: number, direction: -1 | 1) => {
+    setItinerary((prev) => {
+      const target = dayIndex + direction
+      if (target < 0 || target >= prev.days.length) return prev
+      const days = [...prev.days]
+      ;[days[dayIndex], days[target]] = [days[target], days[dayIndex]]
+      return { ...prev, days }
+    })
+    setError(null)
   }
 
   const handleExport = () => {
@@ -101,10 +132,21 @@ export default function App() {
               day={day}
               dayNumber={index + 1}
               isEditing={isEditing}
+              isFirst={index === 0}
+              isLast={index === itinerary.days.length - 1}
+              canDelete={itinerary.days.length > 1}
               onChangeDay={(patch) => updateDay(index, patch)}
               onChangeItems={(items) => updateDay(index, { items })}
+              onMoveUp={() => moveDay(index, -1)}
+              onMoveDown={() => moveDay(index, 1)}
+              onDelete={() => deleteDay(index)}
             />
           ))}
+          {isEditing && (
+            <button type="button" className="btn btn--add no-print" onClick={addDay}>
+              + 날짜 추가
+            </button>
+          )}
         </section>
 
         <RestaurantSection
