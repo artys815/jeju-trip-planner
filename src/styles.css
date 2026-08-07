@@ -699,6 +699,92 @@ a {
   white-space: nowrap;
 }
 
+/* Naver map recommendation */
+.map-reco {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'icon copy'
+    'action action';
+  gap: 0.75rem 0.85rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 1rem 1.05rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #e8f6f7 0%, #f4fbfb 55%, #ffffff 100%);
+  border: 1px solid rgba(19, 101, 111, 0.18);
+  text-decoration: none;
+  color: inherit;
+  min-height: 3.5rem;
+  transition: border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.map-reco:hover {
+  border-color: rgba(19, 101, 111, 0.4);
+  box-shadow: var(--shadow-soft);
+}
+
+.map-reco:active {
+  transform: translateY(1px);
+}
+
+.map-reco__icon {
+  grid-area: icon;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 12px;
+  background: rgba(30, 138, 150, 0.12);
+  font-size: 1.15rem;
+}
+
+.map-reco__copy {
+  grid-area: copy;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.map-reco__eyebrow {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.map-reco__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--teal-800);
+}
+
+.map-reco__badge {
+  justify-self: start;
+  margin-top: 0.2rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(30, 138, 150, 0.12);
+  color: var(--teal-700);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.map-reco__action {
+  grid-area: action;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 2.6rem;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  background: var(--teal-700);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
 /* Restaurants */
 .restaurant-grid {
   list-style: none;
@@ -906,6 +992,16 @@ a {
 
   .restaurant-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .map-reco {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'icon copy action';
+    align-items: center;
+  }
+
+  .map-reco__action {
+    min-width: 6.5rem;
   }
 
   .item:not(.item--edit) {

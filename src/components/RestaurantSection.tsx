@@ -39,6 +39,28 @@ export function RestaurantSection({
         맛집 · 메뉴
       </h2>
       <p className="section__lead">현장 대기와 동선에 따라 골라 먹는 후보 리스트</p>
+
+      <a
+        className="map-reco no-print"
+        href="https://naver.me/FdCCr5WD"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="제주맨 맛집지도 — 네이버지도에서 새 탭으로 열기"
+      >
+        <span className="map-reco__icon" aria-hidden="true">
+          📍
+        </span>
+        <span className="map-reco__copy">
+          <span className="map-reco__eyebrow">제주 맛집을 한눈에</span>
+          <span className="map-reco__title">제주맨 맛집지도</span>
+          <span className="map-reco__badge">네이버지도</span>
+        </span>
+        <span className="map-reco__action">
+          지도 열기
+          <span aria-hidden="true"> ↗</span>
+        </span>
+      </a>
+
       <ul className="restaurant-grid">
         {restaurants.map((restaurant, index) => (
           <li key={restaurant.id} className="restaurant-card">
