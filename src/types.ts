@@ -17,6 +17,12 @@ export interface ItineraryItem {
   mapQuery: string
   /** Optional precise address; preferred over mapQuery for Naver Map search. */
   address?: string
+  /** Optional booking / related link shown as “예약 확인”. */
+  reservationUrl?: string
+  /** Optional free-text travel time note. */
+  travelTime?: string
+  /** Optional preparation / packing note. */
+  preparation?: string
   completed: boolean
 }
 
@@ -24,6 +30,22 @@ export function getMapSearchValue(item: Pick<ItineraryItem, 'mapQuery' | 'addres
   const address = item.address?.trim() ?? ''
   if (address) return address
   return item.mapQuery.trim()
+}
+
+export function isValidHttpUrl(value?: string): boolean {
+  const trimmed = value?.trim() ?? ''
+  if (!trimmed) return false
+  try {
+    const url = new URL(trimmed)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+/** Safe HTTPS Naver Map search URL (can hand off to the Naver Map app on mobile). */
+export function naverMapSearchUrl(query: string): string {
+  return `https://map.naver.com/p/search/${encodeURIComponent(query)}`
 }
 
 export interface Day {

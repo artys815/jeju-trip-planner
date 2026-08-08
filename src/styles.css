@@ -530,6 +530,59 @@ a {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  scroll-margin-top: 5.5rem;
+}
+
+.day-card--flash {
+  animation: dayFlash 1.6s ease;
+}
+
+@keyframes dayFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(30, 138, 150, 0.35);
+  }
+  35% {
+    box-shadow: 0 0 0 6px rgba(30, 138, 150, 0.22), var(--shadow);
+  }
+  100% {
+    box-shadow: var(--shadow);
+  }
+}
+
+/* Today shortcut */
+.today-shortcut {
+  display: grid;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 1rem 1.05rem;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #dff3f5 0%, #f7fbfb 70%);
+  border: 1px solid rgba(19, 101, 111, 0.16);
+  box-shadow: var(--shadow-soft);
+  width: 100%;
+  min-width: 0;
+}
+
+.today-shortcut__label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--teal-700);
+}
+
+.today-shortcut__title {
+  margin: 0.2rem 0 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--teal-900);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.today-shortcut__button {
+  width: 100%;
+  min-height: 2.75rem;
 }
 
 .day-card--orange { --accent: var(--orange); }
@@ -723,17 +776,63 @@ a {
 
 .item__heading {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
 .item__title {
   margin: 0;
+  flex: 1 1 8rem;
   font-size: 1.02rem;
   font-weight: 800;
   letter-spacing: -0.01em;
   overflow-wrap: anywhere;
+}
+
+.item__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  max-width: 100%;
+}
+
+.item__action {
+  flex: 0 0 auto;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 0.45rem 0.75rem;
+  min-height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--teal-100);
+  color: var(--teal-800);
+}
+
+.item__action:hover {
+  background: #c6e7ea;
+}
+
+.item__action--reserve {
+  background: rgba(224, 122, 58, 0.14);
+  color: #b45a1f;
+}
+
+.item__action--reserve:hover {
+  background: rgba(224, 122, 58, 0.22);
+}
+
+.item__travel {
+  margin: 0.35rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .item__desc {
@@ -744,22 +843,12 @@ a {
   overflow-wrap: anywhere;
 }
 
-.item__map {
-  flex: 0 0 auto;
+.item__prep {
+  margin: 0.35rem 0 0;
+  color: var(--ink-muted);
   font-size: 0.84rem;
-  font-weight: 700;
-  text-decoration: none;
-  padding: 0.4rem 0.7rem;
-  min-height: 2rem;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  background: var(--teal-100);
-  color: var(--teal-800);
-}
-
-.item__map:hover {
-  background: #c6e7ea;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .item__edit-grid {
@@ -1210,8 +1299,21 @@ a {
   .edit-field--description,
   .edit-field--map,
   .edit-field--address,
+  .edit-field--reservation,
+  .edit-field--travel,
+  .edit-field--preparation,
   .item__edit-actions {
     grid-column: 1 / -1;
+  }
+
+  .today-shortcut {
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+  }
+
+  .today-shortcut__button {
+    width: auto;
+    min-width: 8.5rem;
   }
 
   .item__edit-actions {
@@ -1306,14 +1408,29 @@ a {
     grid-row: 2;
   }
 
+  .edit-field--reservation {
+    grid-column: 1 / 3;
+    grid-row: 3;
+  }
+
+  .edit-field--travel {
+    grid-column: 3 / 5;
+    grid-row: 3;
+  }
+
+  .edit-field--preparation {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+
   .edit-field--description {
     grid-column: 1 / 4;
-    grid-row: 3;
+    grid-row: 5;
   }
 
   .item__edit-actions {
     grid-column: 4;
-    grid-row: 3;
+    grid-row: 5;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -1402,8 +1519,10 @@ a {
   .day-card--teal { border-left-color: var(--teal); }
   .day-card--coral { border-left-color: var(--coral); }
 
-  .item__map {
-    display: none;
+  .item__actions,
+  .item__action,
+  .today-shortcut {
+    display: none !important;
   }
 
   a {

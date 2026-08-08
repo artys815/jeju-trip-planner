@@ -8,6 +8,7 @@ interface DayCardProps {
   isFirst: boolean
   isLast: boolean
   canDelete: boolean
+  highlighted?: boolean
   onChangeDay: (patch: Partial<Day>) => void
   onChangeItems: (items: ItineraryItem[]) => void
   onMoveUp: () => void
@@ -22,6 +23,7 @@ export function DayCard({
   isFirst,
   isLast,
   canDelete,
+  highlighted = false,
   onChangeDay,
   onChangeItems,
   onMoveUp,
@@ -69,7 +71,10 @@ export function DayCard({
   }
 
   return (
-    <article className={`day-card day-card--${day.accent}`}>
+    <article
+      id={`day-${day.id}`}
+      className={`day-card day-card--${day.accent}${highlighted ? ' day-card--flash' : ''}`}
+    >
       <header className="day-card__header">
         <div className="day-card__badge" aria-hidden="true">
           DAY {dayNumber}

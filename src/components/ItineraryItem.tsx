@@ -1,6 +1,8 @@
 import {
   getMapSearchValue,
+  isValidHttpUrl,
   ITEM_TYPES,
+  naverMapSearchUrl,
   type ItineraryItem as Item,
   type ItemType,
 } from '../types'
@@ -24,10 +26,6 @@ interface ItineraryItemProps {
   onDelete: () => void
   onMoveUp: () => void
   onMoveDown: () => void
-}
-
-function mapUrl(query: string) {
-  return `https://map.naver.com/p/search/${encodeURIComponent(query)}`
 }
 
 export function ItineraryItemView({
@@ -86,6 +84,28 @@ export function ItineraryItemView({
             hint="주소가 입력되어 있으면 주소를 우선 사용하고, 없으면 기존 지도 검색어를 사용합니다."
           />
           <EditField
+            className="edit-field--reservation"
+            label="예약/관련 링크"
+            value={item.reservationUrl ?? ''}
+            onChange={(reservationUrl) => onChange({ reservationUrl })}
+            placeholder="https://..."
+          />
+          <EditField
+            className="edit-field--travel"
+            label="이동시간"
+            value={item.travelTime ?? ''}
+            onChange={(travelTime) => onChange({ travelTime })}
+            placeholder="예: 숙소에서 약 20분"
+          />
+          <EditField
+            className="edit-field--preparation"
+            label="준비물 · 메모"
+            value={item.preparation ?? ''}
+            onChange={(preparation) => onChange({ preparation })}
+            placeholder="예: 수영복, 아쿠아슈즈, 선크림"
+            multiline
+          />
+          <EditField
             className="edit-field--description"
             label="설명"
             value={item.description}
@@ -115,6 +135,11 @@ export function ItineraryItemView({
   }
 
   const searchValue = getMapSearchValue(item)
+  const reservationUrl = item.reservationUrl?.trim() ?? ''
+  const showReservation = isValidHttpUrl(reservationUrl)
+  const travelTime = item.travelTime?.trim() ?? ''
+  const preparation = item.preparation?.trim() ?? ''
+  const mapHref = searchValue ? naverMapSearchUrl(searchValue) : ''
 
   return (
     <li className={`item ${item.completed ? 'item--done' : ''}`}>
@@ -127,18 +152,50 @@ export function ItineraryItemView({
       <div className="item__body">
         <div className="item__heading">
           <h4 className="item__title">{item.title}</h4>
-          {searchValue && (
-            <a
-              className="item__map"
-              href={mapUrl(searchValue)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              지도
-            </a>
+          {(searchValue || showReservation) && (
+            <div className="item__actions no-print">
+              {searchValue && (
+                <a
+                  className="item__action"
+                  href={mapHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  지도
+                </a>
+              )}
+              {searchValue && (
+                <a
+                  className="item__action"
+                  href={mapHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="네이버지도에서 목적지를 연 뒤 길찾기를 이용할 수 있습니다"
+                >
+                  길찾기
+                </a>
+              )}
+              {showReservation && (
+                <a
+                  className="item__action item__action--reserve"
+                  href={reservationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  예약 확인
+                </a>
+              )}
+            </div>
           )}
         </div>
-        <p className="item__desc">{item.description}</p>
+        {travelTime && (
+          <p className="item__travel">
+            <span aria-hidden="true">🚗 </span>
+            {travelTime}
+          </p>
+        )}
+        {item.description && <p className="item__desc">{item.description}</p>}
+        {preparation && <p className="item__prep">준비 · {preparation}</p>}
       </div>
     </li>
   )

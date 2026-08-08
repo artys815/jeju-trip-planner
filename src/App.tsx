@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChecklistSection } from './components/ChecklistSection'
 import { DayCard } from './components/DayCard'
 import { Hero } from './components/Hero'
 import { NoticeSection } from './components/NoticeSection'
 import { ResetModal } from './components/ResetModal'
 import { RestaurantSection } from './components/RestaurantSection'
+import { TodayShortcut } from './components/TodayShortcut'
 import { Toolbar } from './components/Toolbar'
 import { TripSummary } from './components/TripSummary'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { isItinerary, type Day, type Itinerary } from './types'
-import { createNextDay } from './utils/days'
+import { createNextDay, findTodayDayIndex } from './utils/days'
 import './styles.css'
 
 export default function App() {
@@ -19,12 +20,31 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [resetStep, setResetStep] = useState<'warn' | 'confirm' | null>(null)
   const [resetMessage, setResetMessage] = useState<string | null>(null)
+  const [highlightedDayId, setHighlightedDayId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!resetMessage) return
     const timer = window.setTimeout(() => setResetMessage(null), 3200)
     return () => window.clearTimeout(timer)
   }, [resetMessage])
+
+  useEffect(() => {
+    if (!highlightedDayId) return
+    const timer = window.setTimeout(() => setHighlightedDayId(null), 1800)
+    return () => window.clearTimeout(timer)
+  }, [highlightedDayId])
+
+  const todayDayIndex = useMemo(
+    () => findTodayDayIndex(itinerary.days, itinerary.startDate),
+    [itinerary.days, itinerary.startDate],
+  )
+
+  const goToDay = (dayId: string) => {
+    const el = document.getElementById(`day-${dayId}`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setHighlightedDayId(dayId)
+  }
 
   const patchItinerary = (patch: Partial<Itinerary>) => {
     setItinerary((prev) => ({ ...prev, ...patch }))
@@ -133,6 +153,14 @@ export default function App() {
           onChange={patchItinerary}
         />
 
+        {todayDayIndex >= 0 && (
+          <TodayShortcut
+            day={itinerary.days[todayDayIndex]}
+            dayNumber={todayDayIndex + 1}
+            onGoToDay={goToDay}
+          />
+        )}
+
         <section className="days" aria-label="일자별 일정">
           {itinerary.days.map((day, index) => (
             <DayCard
@@ -143,6 +171,7 @@ export default function App() {
               isFirst={index === 0}
               isLast={index === itinerary.days.length - 1}
               canDelete={itinerary.days.length > 1}
+              highlighted={highlightedDayId === day.id}
               onChangeDay={(patch) => updateDay(index, patch)}
               onChangeItems={(items) => updateDay(index, { items })}
               onMoveUp={() => moveDay(index, -1)}
