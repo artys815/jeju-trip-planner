@@ -195,8 +195,16 @@ export default function App() {
     setResetMessage('기본 일정으로 복원되었습니다.')
   }
 
+  const showTravelDayLive = Boolean(todayDay && liveStatus)
+  const showStickyBar = Boolean(
+    todayDay &&
+      liveStatus?.nextItem &&
+      !isEditing &&
+      !stickyHidden,
+  )
+
   return (
-    <div className="app">
+    <div className={`app${showStickyBar ? ' app--sticky-live' : ''}`}>
       <Hero
         itinerary={itinerary}
         isEditing={isEditing}
@@ -204,26 +212,7 @@ export default function App() {
       />
 
       <main className="main">
-        <Toolbar
-          isEditing={isEditing}
-          onToggleMode={() => setIsEditing((v) => !v)}
-          onExport={handleExport}
-          onImport={handleImport}
-          onReset={() => setResetStep('warn')}
-          onPrint={() => window.print()}
-          saveFlash={saveFlash}
-          savedAt={savedAt}
-          error={error}
-          statusMessage={resetMessage}
-        />
-
-        <TripSummary
-          itinerary={itinerary}
-          isEditing={isEditing}
-          onChange={patchItinerary}
-        />
-
-        {todayDay && liveStatus && (
+        {showTravelDayLive && todayDay && liveStatus && (
           <TodayShortcut
             day={todayDay}
             dayNumber={todayDayIndex + 1}
@@ -243,6 +232,25 @@ export default function App() {
             }}
           />
         )}
+
+        <Toolbar
+          isEditing={isEditing}
+          onToggleMode={() => setIsEditing((v) => !v)}
+          onExport={handleExport}
+          onImport={handleImport}
+          onReset={() => setResetStep('warn')}
+          onPrint={() => window.print()}
+          saveFlash={saveFlash}
+          savedAt={savedAt}
+          error={error}
+          statusMessage={resetMessage}
+        />
+
+        <TripSummary
+          itinerary={itinerary}
+          isEditing={isEditing}
+          onChange={patchItinerary}
+        />
 
         <section className="days" aria-label="일자별 일정">
           {itinerary.days.map((day, index) => (
@@ -303,20 +311,18 @@ export default function App() {
         onConfirm={handleResetConfirm}
       />
 
-      {todayDay &&
-        liveStatus?.nextItem &&
-        liveAssist.enabled &&
-        liveAssist.snapshot &&
-        !stickyHidden && (
-          <LiveStickyBar
-            nextTime={liveStatus.nextItem.time}
-            nextTitle={liveStatus.nextItem.title}
-            etaMinutes={liveAssist.snapshot.etaMinutes}
-            recommendedDepartureLabel={liveAssist.snapshot.recommendedDepartureLabel}
-            onOpen={goToLiveTarget}
-            onClose={() => setStickyHidden(true)}
-          />
-        )}
+      {showStickyBar && todayDay && liveStatus?.nextItem && (
+        <LiveStickyBar
+          nextTime={liveStatus.nextItem.time}
+          nextTitle={liveStatus.nextItem.title}
+          etaMinutes={liveAssist.snapshot?.etaMinutes ?? null}
+          recommendedDepartureLabel={
+            liveAssist.snapshot?.recommendedDepartureLabel ?? null
+          }
+          onOpen={goToLiveTarget}
+          onClose={() => setStickyHidden(true)}
+        />
+      )}
     </div>
   )
 }

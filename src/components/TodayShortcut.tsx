@@ -102,7 +102,7 @@ export function TodayShortcut({
                 className="btn btn--ghost live-assist__enable"
                 onClick={onEnableLive}
               >
-                실시간 이동 도우미 켜기
+                현재 위치로 이동시간 확인
               </button>
             ) : (
               <>
@@ -115,7 +115,7 @@ export function TodayShortcut({
                 {liveSnapshot && (
                   <div className="live-assist__result">
                     <p className="live-assist__eta">
-                      🚗 현재 예상 이동시간 약 {liveSnapshot.etaMinutes}분
+                      🚗 다음 장소까지 약 {liveSnapshot.etaMinutes}분
                     </p>
                     <p className="live-assist__distance">
                       📏 {liveSnapshot.distanceLabel}

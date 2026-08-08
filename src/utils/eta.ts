@@ -34,26 +34,16 @@ export function getArrivalStatus(
   return 'LEAVE_NOW'
 }
 
-export function arrivalStatusMessage(
-  status: ArrivalStatus,
-  nowMinutes: number,
-  recommendedDepartureMinutes: number,
-  nextStartMinutes: number,
-  etaMinutes: number,
-): string {
+export function arrivalStatusMessage(status: ArrivalStatus): string {
   switch (status) {
-    case 'SAFE': {
-      const spare = recommendedDepartureMinutes - nowMinutes
-      return `아직 ${spare}분 여유 있어요`
-    }
+    case 'SAFE':
+      return '여유 있음'
     case 'LEAVE_SOON':
-      return '곧 출발하는 것이 좋아요'
+      return '곧 출발 권장'
     case 'LEAVE_NOW':
       return '지금 출발 권장'
-    case 'LATE_RISK': {
-      const lateBy = nowMinutes + etaMinutes - nextStartMinutes
-      return `지금 출발하면 일정 시간보다 약 ${Math.max(1, lateBy)}분 늦을 수 있어요`
-    }
+    case 'LATE_RISK':
+      return '늦을 가능성 있음'
   }
 }
 

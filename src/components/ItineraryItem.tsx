@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   isValidHttpUrl,
   ITEM_TYPES,
@@ -6,9 +7,9 @@ import {
 } from '../types'
 import type { LiveRole } from '../utils/liveStatus'
 import {
-  getKakaoDirectionsUrlForItem,
   getKakaoMapUrl,
   getMapDestination,
+  resolveKakaoDirectionsUrl,
 } from '../utils/maps'
 import { EditField } from './EditField'
 
@@ -48,7 +49,13 @@ export function ItineraryItemView({
   onMoveUp,
   onMoveDown,
 }: ItineraryItemProps) {
+  const [directionsBusy, setDirectionsBusy] = useState(false)
+
   if (isEditing) {
+    const hasMapQuery = Boolean(item.mapQuery.trim())
+    const hasAddress = Boolean(item.address?.trim())
+    const showAddressHint = hasMapQuery && !hasAddress
+
     return (
       <li className="item item--edit">
         <div className="item__edit-grid">
@@ -93,6 +100,11 @@ export function ItineraryItemView({
             placeholder="제주특별자치도 제주시 조천읍..."
             hint="주소가 입력되어 있으면 주소를 우선 사용하고, 없으면 기존 지도 검색어를 사용합니다."
           />
+          {showAddressHint && (
+            <p className="item__address-hint no-print">
+              정확한 주소를 입력하면 이동시간 계산이 더 정확해집니다.
+            </p>
+          )}
           <EditField
             className="edit-field--reservation"
             label="예약/관련 링크"
@@ -150,7 +162,6 @@ export function ItineraryItemView({
   const travelTime = item.travelTime?.trim() ?? ''
   const preparation = item.preparation?.trim() ?? ''
   const mapHref = destination ? getKakaoMapUrl(destination) : ''
-  const directionsHref = destination ? getKakaoDirectionsUrlForItem(item) : ''
 
   const liveClass =
     liveRole === 'current'
@@ -158,6 +169,19 @@ export function ItineraryItemView({
       : liveRole === 'next'
         ? ' item--live-next'
         : ''
+
+  const openDirections = async () => {
+    if (!destination || directionsBusy) return
+    setDirectionsBusy(true)
+    try {
+      const href = await resolveKakaoDirectionsUrl(item)
+      if (href) {
+        window.open(href, '_blank', 'noopener,noreferrer')
+      }
+    } finally {
+      setDirectionsBusy(false)
+    }
+  }
 
   return (
     <li
@@ -171,64 +195,66 @@ export function ItineraryItemView({
         <time dateTime={item.time}>{item.time}</time>
       </div>
       <div className="item__body">
-        <div className="item__heading">
-          <div className="item__title-row">
-            {liveRole === 'current' && (
-              <span className="item__live-badge item__live-badge--now no-print">
-                ● 지금
-              </span>
-            )}
-            {liveRole === 'next' && (
-              <span className="item__live-badge item__live-badge--next no-print">
-                {liveCountdown ? `다음 · ${liveCountdown}` : '다음'}
-              </span>
-            )}
-            <h4 className="item__title">{item.title}</h4>
-          </div>
-          {(destination || showReservation) && (
-            <div className="item__actions no-print">
-              {destination && (
-                <div className="item__actions-map">
-                  <a
-                    className="item__action"
-                    href={mapHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    지도
-                  </a>
-                  <a
-                    className="item__action"
-                    href={directionsHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="카카오맵 길찾기"
-                  >
-                    길찾기
-                  </a>
-                </div>
-              )}
-              {showReservation && (
-                <a
-                  className="item__action item__action--reserve"
-                  href={reservationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  예약 확인
-                </a>
-              )}
-            </div>
+        <div className="item__title-row">
+          {liveRole === 'current' && (
+            <span className="item__live-badge item__live-badge--now no-print">지금</span>
           )}
+          {liveRole === 'next' && (
+            <span className="item__live-badge item__live-badge--next no-print">
+              {liveCountdown ? `다음 · ${liveCountdown}` : '다음'}
+            </span>
+          )}
+          <h4 className="item__title">{item.title}</h4>
         </div>
-        {travelTime && (
-          <p className="item__travel">
-            <span aria-hidden="true">🚗 </span>
-            {travelTime}
-          </p>
+
+        {(travelTime || item.description || preparation) && (
+          <div className="item__meta">
+            {travelTime && (
+              <p className="item__travel">
+                <span aria-hidden="true">🚗 </span>
+                {travelTime}
+              </p>
+            )}
+            {item.description && <p className="item__desc">{item.description}</p>}
+            {preparation && <p className="item__prep">준비 · {preparation}</p>}
+          </div>
         )}
-        {item.description && <p className="item__desc">{item.description}</p>}
-        {preparation && <p className="item__prep">준비 · {preparation}</p>}
+
+        {(destination || showReservation) && (
+          <div className="item__actions no-print">
+            {destination && (
+              <a
+                className="item__action"
+                href={mapHref}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                지도
+              </a>
+            )}
+            {destination && (
+              <button
+                type="button"
+                className="item__action item__action--button"
+                onClick={() => void openDirections()}
+                disabled={directionsBusy}
+                title="카카오맵 길찾기"
+              >
+                {directionsBusy ? '위치 확인 중...' : '길찾기'}
+              </button>
+            )}
+            {showReservation && (
+              <a
+                className="item__action item__action--reserve"
+                href={reservationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                예약 확인
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </li>
   )

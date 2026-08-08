@@ -9,11 +9,13 @@ import {
   getRecommendedDepartureMinutes,
   type ArrivalStatus,
 } from '../utils/eta'
-import { getCachedGeocode, setCachedGeocode } from '../utils/geocodeCache'
+import { resolveGeocode } from '../utils/geocodeResolve'
 import { parseTimeToMinutes } from '../utils/liveStatus'
 import { getMapDestination } from '../utils/maps'
 
 const REFRESH_MS = 5 * 60 * 1000
+/** Session-only flag — never stores GPS or itinerary data. */
+const LIVE_ASSIST_SESSION_KEY = 'jeju-trip-live-assist-enabled'
 
 export type LiveAssistErrorCode =
   | 'UNSUPPORTED'
@@ -35,6 +37,23 @@ export interface LiveAssistSnapshot {
   statusMessage: string
   directionsUrl: string
   fetchedAt: number
+}
+
+function readSessionEnabled(): boolean {
+  try {
+    return sessionStorage.getItem(LIVE_ASSIST_SESSION_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writeSessionEnabled(enabled: boolean) {
+  try {
+    if (enabled) sessionStorage.setItem(LIVE_ASSIST_SESSION_KEY, '1')
+    else sessionStorage.removeItem(LIVE_ASSIST_SESSION_KEY)
+  } catch {
+    // ignore
+  }
 }
 
 function errorMessage(code: LiveAssistErrorCode): string {
@@ -61,28 +80,6 @@ function errorMessage(code: LiveAssistErrorCode): string {
   }
 }
 
-async function geocodeDestination(query: string): Promise<{
-  lat: number
-  lng: number
-  addressName?: string
-} | null> {
-  const cached = getCachedGeocode(query)
-  if (cached) return cached
-
-  const url = `/api/geocode?${new URLSearchParams({ address: query }).toString()}`
-  const res = await fetch(url)
-  const data: unknown = await res.json().catch(() => null)
-  if (!res.ok || !data || typeof data !== 'object') return null
-  const body = data as Record<string, unknown>
-  if (body.ok !== true) return null
-  const lat = Number(body.lat)
-  const lng = Number(body.lng)
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
-  const addressName =
-    typeof body.addressName === 'string' ? body.addressName : undefined
-  return setCachedGeocode(query, lat, lng, addressName)
-}
-
 function getCurrentPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -101,7 +98,7 @@ export function useLiveTravelAssistant(
   nextItem: ItineraryItem | null,
   now: Date,
 ) {
-  const [enabled, setEnabled] = useState(false)
+  const [enabled, setEnabled] = useState(readSessionEnabled)
   const [loading, setLoading] = useState(false)
   const [errorCode, setErrorCode] = useState<LiveAssistErrorCode | null>(null)
   const [snapshot, setSnapshot] = useState<LiveAssistSnapshot | null>(null)
@@ -141,7 +138,7 @@ export function useLiveTravelAssistant(
       const originLat = position.coords.latitude
       const originLng = position.coords.longitude
 
-      const geo = await geocodeDestination(destination)
+      const geo = await resolveGeocode(destination)
       if (!geo) {
         setErrorCode('GEOCODE_FAILED')
         setSnapshot(null)
@@ -197,13 +194,7 @@ export function useLiveTravelAssistant(
         distanceLabel: formatDistanceKm(distanceMeters),
         recommendedDepartureLabel: formatClockMinutes(recommended),
         status,
-        statusMessage: arrivalStatusMessage(
-          status,
-          nowMinutes,
-          recommended,
-          nextStart,
-          etaMinutes,
-        ),
+        statusMessage: arrivalStatusMessage(status),
         directionsUrl: `https://map.kakao.com/link/to/${encodeURIComponent(nextItem.title || destination)},${geo.lat},${geo.lng}`,
         fetchedAt: Date.now(),
       })
@@ -226,6 +217,7 @@ export function useLiveTravelAssistant(
   }, [nextItem])
 
   const enable = useCallback(() => {
+    writeSessionEnabled(true)
     setEnabled(true)
   }, [])
 
@@ -235,6 +227,7 @@ export function useLiveTravelAssistant(
   }, [enabled, runFetch])
 
   const disable = useCallback(() => {
+    writeSessionEnabled(false)
     setEnabled(false)
     setSnapshot(null)
     setErrorCode(null)
