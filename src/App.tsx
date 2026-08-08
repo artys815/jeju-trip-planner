@@ -9,18 +9,23 @@ import { TodayShortcut } from './components/TodayShortcut'
 import { Toolbar } from './components/Toolbar'
 import { TripSummary } from './components/TripSummary'
 import { useLocalStorage } from './hooks/useLocalStorage'
+import { useNow } from './hooks/useNow'
 import { isItinerary, type Day, type Itinerary } from './types'
 import { createNextDay, findTodayDayIndex } from './utils/days'
+import { getLiveDayStatus } from './utils/liveStatus'
 import './styles.css'
 
 export default function App() {
   const { itinerary, setItinerary, savedAt, saveFlash, resetToDefault } =
     useLocalStorage()
+  const now = useNow()
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resetStep, setResetStep] = useState<'warn' | 'confirm' | null>(null)
   const [resetMessage, setResetMessage] = useState<string | null>(null)
   const [highlightedDayId, setHighlightedDayId] = useState<string | null>(null)
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null)
+  const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     if (!resetMessage) return
@@ -34,16 +39,76 @@ export default function App() {
     return () => window.clearTimeout(timer)
   }, [highlightedDayId])
 
+  useEffect(() => {
+    if (!highlightedItemId) return
+    const timer = window.setTimeout(() => setHighlightedItemId(null), 1800)
+    return () => window.clearTimeout(timer)
+  }, [highlightedItemId])
+
+  useEffect(() => {
+    if (isEditing) setCollapsedDays({})
+  }, [isEditing])
+
   const todayDayIndex = useMemo(
-    () => findTodayDayIndex(itinerary.days, itinerary.startDate),
-    [itinerary.days, itinerary.startDate],
+    () => findTodayDayIndex(itinerary.days, itinerary.startDate, now),
+    [itinerary.days, itinerary.startDate, now],
   )
 
+  const todayDay = todayDayIndex >= 0 ? itinerary.days[todayDayIndex] : null
+
+  const liveStatus = useMemo(() => {
+    if (!todayDay) return null
+    return getLiveDayStatus(todayDay.items, now)
+  }, [todayDay, now])
+
+  const expandDay = (dayId: string) => {
+    setCollapsedDays((prev) => {
+      if (!prev[dayId]) return prev
+      const next = { ...prev }
+      delete next[dayId]
+      return next
+    })
+  }
+
+  const toggleDayCollapse = (dayId: string) => {
+    setCollapsedDays((prev) => ({
+      ...prev,
+      [dayId]: !prev[dayId],
+    }))
+  }
+
+  const scrollToElement = (elementId: string) => {
+    window.setTimeout(() => {
+      document.getElementById(elementId)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }, 60)
+  }
+
   const goToDay = (dayId: string) => {
-    const el = document.getElementById(`day-${dayId}`)
-    if (!el) return
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    expandDay(dayId)
     setHighlightedDayId(dayId)
+    scrollToElement(`day-${dayId}`)
+  }
+
+  const goToLiveTarget = () => {
+    if (!todayDay) return
+    expandDay(todayDay.id)
+
+    if (liveStatus?.currentItemId) {
+      setHighlightedItemId(liveStatus.currentItemId)
+      scrollToElement(`item-${liveStatus.currentItemId}`)
+      return
+    }
+
+    if (liveStatus?.nextItemId) {
+      setHighlightedItemId(liveStatus.nextItemId)
+      scrollToElement(`item-${liveStatus.nextItemId}`)
+      return
+    }
+
+    goToDay(todayDay.id)
   }
 
   const patchItinerary = (patch: Partial<Itinerary>) => {
@@ -153,11 +218,14 @@ export default function App() {
           onChange={patchItinerary}
         />
 
-        {todayDayIndex >= 0 && (
+        {todayDay && liveStatus && (
           <TodayShortcut
-            day={itinerary.days[todayDayIndex]}
+            day={todayDay}
             dayNumber={todayDayIndex + 1}
-            onGoToDay={goToDay}
+            currentItem={liveStatus.currentItem}
+            nextItem={liveStatus.nextItem}
+            minutesUntilNext={liveStatus.minutesUntilNext}
+            onGoToLive={goToLiveTarget}
           />
         )}
 
@@ -172,6 +240,10 @@ export default function App() {
               isLast={index === itinerary.days.length - 1}
               canDelete={itinerary.days.length > 1}
               highlighted={highlightedDayId === day.id}
+              highlightedItemId={highlightedItemId}
+              collapsed={Boolean(collapsedDays[day.id])}
+              onToggleCollapse={() => toggleDayCollapse(day.id)}
+              liveStatus={index === todayDayIndex ? liveStatus : null}
               onChangeDay={(patch) => updateDay(index, patch)}
               onChangeItems={(items) => updateDay(index, { items })}
               onMoveUp={() => moveDay(index, -1)}

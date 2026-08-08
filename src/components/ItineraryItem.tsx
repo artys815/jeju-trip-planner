@@ -6,6 +6,7 @@ import {
   type ItineraryItem as Item,
   type ItemType,
 } from '../types'
+import type { LiveRole } from '../utils/liveStatus'
 import { EditField } from './EditField'
 
 const TYPE_ICON: Record<ItemType, string> = {
@@ -22,6 +23,9 @@ interface ItineraryItemProps {
   isEditing: boolean
   isFirst: boolean
   isLast: boolean
+  liveRole?: LiveRole | null
+  liveCountdown?: string | null
+  highlighted?: boolean
   onChange: (patch: Partial<Item>) => void
   onDelete: () => void
   onMoveUp: () => void
@@ -33,6 +37,9 @@ export function ItineraryItemView({
   isEditing,
   isFirst,
   isLast,
+  liveRole = null,
+  liveCountdown = null,
+  highlighted = false,
   onChange,
   onDelete,
   onMoveUp,
@@ -141,8 +148,18 @@ export function ItineraryItemView({
   const preparation = item.preparation?.trim() ?? ''
   const mapHref = searchValue ? naverMapSearchUrl(searchValue) : ''
 
+  const liveClass =
+    liveRole === 'current'
+      ? ' item--live-current'
+      : liveRole === 'next'
+        ? ' item--live-next'
+        : ''
+
   return (
-    <li className={`item ${item.completed ? 'item--done' : ''}`}>
+    <li
+      id={`item-${item.id}`}
+      className={`item${item.completed ? ' item--done' : ''}${liveClass}${highlighted ? ' item--flash' : ''}`}
+    >
       <div className="item__time">
         <span className="item__icon" aria-hidden="true">
           {TYPE_ICON[item.type]}
@@ -151,7 +168,19 @@ export function ItineraryItemView({
       </div>
       <div className="item__body">
         <div className="item__heading">
-          <h4 className="item__title">{item.title}</h4>
+          <div className="item__title-row">
+            {liveRole === 'current' && (
+              <span className="item__live-badge item__live-badge--now no-print">
+                ● 지금
+              </span>
+            )}
+            {liveRole === 'next' && (
+              <span className="item__live-badge item__live-badge--next no-print">
+                {liveCountdown ? `다음 · ${liveCountdown}` : '다음'}
+              </span>
+            )}
+            <h4 className="item__title">{item.title}</h4>
+          </div>
           {(searchValue || showReservation) && (
             <div className="item__actions no-print">
               {searchValue && (

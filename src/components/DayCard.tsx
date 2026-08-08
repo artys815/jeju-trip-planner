@@ -1,4 +1,9 @@
 import { createId, type Day, type ItineraryItem } from '../types'
+import {
+  formatCountdown,
+  type LiveDayStatus,
+  type LiveRole,
+} from '../utils/liveStatus'
 import { ItineraryItemView } from './ItineraryItem'
 
 interface DayCardProps {
@@ -9,6 +14,10 @@ interface DayCardProps {
   isLast: boolean
   canDelete: boolean
   highlighted?: boolean
+  highlightedItemId?: string | null
+  collapsed?: boolean
+  onToggleCollapse?: () => void
+  liveStatus?: LiveDayStatus | null
   onChangeDay: (patch: Partial<Day>) => void
   onChangeItems: (items: ItineraryItem[]) => void
   onMoveUp: () => void
@@ -24,6 +33,10 @@ export function DayCard({
   isLast,
   canDelete,
   highlighted = false,
+  highlightedItemId = null,
+  collapsed = false,
+  onToggleCollapse,
+  liveStatus = null,
   onChangeDay,
   onChangeItems,
   onMoveUp,
@@ -65,15 +78,28 @@ export function DayCard({
   const handleDeleteDay = () => {
     if (!canDelete) return
     const label = day.date.trim() || day.area.trim() || `DAY ${dayNumber}`
-    if (window.confirm(`「${label}」 날짜 일정을 삭제할까요? 이 날짜의 모든 일정도 함께 삭제됩니다.`)) {
+    if (
+      window.confirm(
+        `「${label}」 날짜 일정을 삭제할까요? 이 날짜의 모든 일정도 함께 삭제됩니다.`,
+      )
+    ) {
       onDelete()
     }
+  }
+
+  const isCollapsed = !isEditing && collapsed
+
+  const getLiveRole = (itemId: string): LiveRole | null => {
+    if (!liveStatus) return null
+    if (liveStatus.currentItemId === itemId) return 'current'
+    if (liveStatus.nextItemId === itemId) return 'next'
+    return null
   }
 
   return (
     <article
       id={`day-${day.id}`}
-      className={`day-card day-card--${day.accent}${highlighted ? ' day-card--flash' : ''}`}
+      className={`day-card day-card--${day.accent}${highlighted ? ' day-card--flash' : ''}${isCollapsed ? ' day-card--collapsed' : ''}`}
     >
       <header className="day-card__header">
         <div className="day-card__badge" aria-hidden="true">
@@ -141,31 +167,57 @@ export function DayCard({
               </div>
             </>
           ) : (
-            <>
-              <p className="day-card__date">
-                {day.date} <span>({day.weekday})</span>
-              </p>
-              <h3 className="day-card__theme">{day.theme}</h3>
-              <p className="day-card__area">{day.area}</p>
-            </>
+            <div className="day-card__view-top">
+              <div>
+                <p className="day-card__date">
+                  {day.date} <span>({day.weekday})</span>
+                </p>
+                <h3 className="day-card__theme">{day.theme}</h3>
+                <p className="day-card__area">{day.area}</p>
+                {isCollapsed && (
+                  <p className="day-card__count">일정 {day.items.length}개</p>
+                )}
+              </div>
+              {onToggleCollapse && (
+                <button
+                  type="button"
+                  className="day-card__collapse no-print"
+                  onClick={onToggleCollapse}
+                  aria-expanded={!isCollapsed}
+                  aria-controls={`day-items-${day.id}`}
+                >
+                  {isCollapsed ? '펼치기' : '접기'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </header>
 
-      <ol className="day-card__items">
-        {day.items.map((item, index) => (
-          <ItineraryItemView
-            key={item.id}
-            item={item}
-            isEditing={isEditing}
-            isFirst={index === 0}
-            isLast={index === day.items.length - 1}
-            onChange={(patch) => updateItem(index, patch)}
-            onDelete={() => deleteItem(index)}
-            onMoveUp={() => moveItem(index, -1)}
-            onMoveDown={() => moveItem(index, 1)}
-          />
-        ))}
+      <ol id={`day-items-${day.id}`} className="day-card__items">
+        {day.items.map((item, index) => {
+          const role = getLiveRole(item.id)
+          return (
+            <ItineraryItemView
+              key={item.id}
+              item={item}
+              isEditing={isEditing}
+              isFirst={index === 0}
+              isLast={index === day.items.length - 1}
+              liveRole={role}
+              liveCountdown={
+                role === 'next' && liveStatus?.minutesUntilNext != null
+                  ? formatCountdown(liveStatus.minutesUntilNext)
+                  : null
+              }
+              highlighted={highlightedItemId === item.id}
+              onChange={(patch) => updateItem(index, patch)}
+              onDelete={() => deleteItem(index)}
+              onMoveUp={() => moveItem(index, -1)}
+              onMoveDown={() => moveItem(index, 1)}
+            />
+          )
+        })}
       </ol>
 
       {isEditing && (
