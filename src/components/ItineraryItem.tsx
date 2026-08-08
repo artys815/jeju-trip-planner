@@ -5,12 +5,9 @@ import {
   type ItineraryItem as Item,
   type ItemType,
 } from '../types'
+import { timeToInputValue } from '../utils/dateFormat'
 import type { LiveRole } from '../utils/liveStatus'
-import {
-  getKakaoMapUrl,
-  getMapDestination,
-  resolveKakaoDirectionsUrl,
-} from '../utils/maps'
+import { getKakaoMapUrl, getMapDestination, openKakaoDirections } from '../utils/maps'
 import { EditField } from './EditField'
 
 const TYPE_ICON: Record<ItemType, string> = {
@@ -55,85 +52,113 @@ export function ItineraryItemView({
     const hasMapQuery = Boolean(item.mapQuery.trim())
     const hasAddress = Boolean(item.address?.trim())
     const showAddressHint = hasMapQuery && !hasAddress
+    const timeInput = timeToInputValue(item.time)
+    const timeMalformed = Boolean(item.time.trim()) && !timeInput
 
     return (
       <li className="item item--edit">
         <div className="item__edit-grid">
-          <EditField
-            className="edit-field--time"
-            label="시간"
-            value={item.time}
-            onChange={(time) => onChange({ time })}
-          />
-          <label className="edit-field edit-field--type">
-            <span className="edit-field__label">유형</span>
-            <select
-              className="edit-field__input"
-              value={item.type}
-              onChange={(e) => onChange({ type: e.target.value as ItemType })}
-            >
-              {ITEM_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <EditField
-            className="edit-field--title"
-            label="제목"
-            value={item.title}
-            onChange={(title) => onChange({ title })}
-          />
-          <EditField
-            className="edit-field--map"
-            label="지도 검색어"
-            value={item.mapQuery}
-            onChange={(mapQuery) => onChange({ mapQuery })}
-            placeholder="예: 협재해수욕장"
-          />
-          <EditField
-            className="edit-field--address"
-            label="정확한 주소 (선택)"
-            value={item.address ?? ''}
-            onChange={(address) => onChange({ address })}
-            placeholder="제주특별자치도 제주시 조천읍..."
-            hint="주소가 입력되어 있으면 주소를 우선 사용하고, 없으면 기존 지도 검색어를 사용합니다."
-          />
-          {showAddressHint && (
-            <p className="item__address-hint no-print">
-              정확한 주소를 입력하면 이동시간 계산이 더 정확해집니다.
-            </p>
-          )}
-          <EditField
-            className="edit-field--reservation"
-            label="예약/관련 링크"
-            value={item.reservationUrl ?? ''}
-            onChange={(reservationUrl) => onChange({ reservationUrl })}
-            placeholder="https://..."
-          />
-          <EditField
-            className="edit-field--travel"
-            label="이동시간"
-            value={item.travelTime ?? ''}
-            onChange={(travelTime) => onChange({ travelTime })}
-            placeholder="예: 숙소에서 약 20분"
-          />
-          <EditField
-            className="edit-field--preparation"
-            label="준비물 · 메모"
-            value={item.preparation ?? ''}
-            onChange={(preparation) => onChange({ preparation })}
-            placeholder="예: 수영복, 아쿠아슈즈, 선크림"
-            multiline
-          />
-          <EditField
-            className="edit-field--description"
-            label="설명"
-            value={item.description}
-            onChange={(description) => onChange({ description })}
-            multiline
-          />
+          <p className="edit-section-label">일정 내용</p>
+          <div className="item__edit-group item__edit-group--basic">
+            {timeMalformed ? (
+              <EditField
+                id={`item-time-${item.id}`}
+                className="edit-field--time"
+                label="시간"
+                value={item.time}
+                onChange={(time) => onChange({ time })}
+                hint="시간 형식이 올바르지 않습니다. 예: 09:30"
+              />
+            ) : (
+              <EditField
+                id={`item-time-${item.id}`}
+                className="edit-field--time"
+                label="시간"
+                type="time"
+                value={timeInput}
+                onChange={(time) => onChange({ time })}
+              />
+            )}
+            <label className="edit-field edit-field--type">
+              <span className="edit-field__label">유형</span>
+              <select
+                className="edit-field__input"
+                value={item.type}
+                onChange={(e) => onChange({ type: e.target.value as ItemType })}
+              >
+                {ITEM_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <EditField
+              className="edit-field--title"
+              label="제목"
+              value={item.title}
+              onChange={(title) => onChange({ title })}
+            />
+            <EditField
+              className="edit-field--description"
+              label="설명"
+              value={item.description}
+              onChange={(description) => onChange({ description })}
+              multiline
+            />
+          </div>
+
+          <p className="edit-section-label">위치 정보</p>
+          <div className="item__edit-group">
+            <EditField
+              className="edit-field--map"
+              label="지도 검색어"
+              value={item.mapQuery}
+              onChange={(mapQuery) => onChange({ mapQuery })}
+              placeholder="예: 협재해수욕장"
+            />
+            <EditField
+              className="edit-field--address"
+              label="정확한 주소 (선택)"
+              value={item.address ?? ''}
+              onChange={(address) => onChange({ address })}
+              placeholder="제주특별자치도 제주시 조천읍..."
+              hint="주소가 있으면 주소를 우선 사용합니다."
+            />
+            {showAddressHint && (
+              <p className="item__address-hint no-print">
+                정확한 주소를 입력하면 이동시간 계산이 더 정확해집니다.
+              </p>
+            )}
+          </div>
+
+          <p className="edit-section-label">예약/메모</p>
+          <div className="item__edit-group">
+            <EditField
+              id={`item-reservation-${item.id}`}
+              className="edit-field--reservation"
+              label="예약/관련 링크"
+              value={item.reservationUrl ?? ''}
+              onChange={(reservationUrl) => onChange({ reservationUrl })}
+              placeholder="https://..."
+            />
+            <EditField
+              className="edit-field--travel"
+              label="이동시간"
+              value={item.travelTime ?? ''}
+              onChange={(travelTime) => onChange({ travelTime })}
+              placeholder="예: 숙소에서 약 20분"
+            />
+            <EditField
+              className="edit-field--preparation"
+              label="준비물 · 메모"
+              value={item.preparation ?? ''}
+              onChange={(preparation) => onChange({ preparation })}
+              placeholder="예: 수영복, 아쿠아슈즈, 선크림"
+              multiline
+            />
+          </div>
+
           <div className="item__edit-actions no-print">
             <button type="button" className="btn btn--small" onClick={onMoveUp} disabled={isFirst}>
               위로
@@ -145,7 +170,14 @@ export function ItineraryItemView({
               type="button"
               className="btn btn--small btn--danger"
               onClick={() => {
-                if (window.confirm('이 일정을 삭제할까요?')) onDelete()
+                const label = [item.time.trim(), item.title.trim()].filter(Boolean).join(' ')
+                if (
+                  window.confirm(
+                    `「${label || '이 일정'}」 일정을 삭제할까요?`,
+                  )
+                ) {
+                  onDelete()
+                }
               }}
             >
               삭제
@@ -174,10 +206,7 @@ export function ItineraryItemView({
     if (!destination || directionsBusy) return
     setDirectionsBusy(true)
     try {
-      const href = await resolveKakaoDirectionsUrl(item)
-      if (href) {
-        window.open(href, '_blank', 'noopener,noreferrer')
-      }
+      await openKakaoDirections(item)
     } finally {
       setDirectionsBusy(false)
     }

@@ -236,6 +236,112 @@ a {
   padding-bottom: 5.25rem;
 }
 
+.app--editing .main {
+  padding-bottom: 6.5rem;
+}
+
+.edit-section-label {
+  margin: 0.35rem 0 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--teal-700);
+  grid-column: 1 / -1;
+}
+
+.edit-actions-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  padding: 0.55rem 0.75rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 252, 247, 0.96);
+  border-top: 1px solid rgba(31, 42, 46, 0.1);
+  box-shadow: 0 -8px 24px rgba(31, 42, 46, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.edit-actions-bar__inner {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.edit-actions-bar__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.edit-actions-bar__buttons {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 0.45rem;
+}
+
+.edit-actions-bar__buttons .btn {
+  min-height: 2.75rem;
+  width: 100%;
+}
+
+.toolbar__edit-actions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.toolbar__edit-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+.toolbar__unsaved {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #b45a1f;
+}
+
+.hero__date-notice {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.day-card__weekday-readonly {
+  margin: 0;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--teal-900);
+}
+
+.day-card__weekday-readonly .edit-field__hint {
+  font-weight: 500;
+}
+
+.item__edit-group {
+  display: grid;
+  gap: 0.65rem;
+  grid-column: 1 / -1;
+  padding: 0.65rem 0.7rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(31, 42, 46, 0.06);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* Toolbar */
 .toolbar {
   position: sticky;
@@ -1819,7 +1925,8 @@ a {
   .btn--add,
   .hero__decor,
   .hero__curve,
-  .reset-modal {
+  .reset-modal,
+  .edit-actions-bar {
     display: none !important;
   }
 

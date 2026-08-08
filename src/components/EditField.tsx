@@ -3,10 +3,12 @@ interface EditFieldProps {
   value: string
   onChange: (value: string) => void
   multiline?: boolean
-  type?: 'text' | 'time'
+  type?: 'text' | 'time' | 'date'
   placeholder?: string
   className?: string
   hint?: string
+  id?: string
+  readOnly?: boolean
 }
 
 export function EditField({
@@ -18,8 +20,10 @@ export function EditField({
   placeholder,
   className = '',
   hint,
+  id: idProp,
+  readOnly = false,
 }: EditFieldProps) {
-  const id = `field-${label.replace(/\s+/g, '-')}`
+  const id = idProp ?? `field-${label.replace(/\s+/g, '-')}`
   const hintId = hint ? `${id}-hint` : undefined
   const fieldClass = ['edit-field', className].filter(Boolean).join(' ')
 
@@ -35,6 +39,7 @@ export function EditField({
           placeholder={placeholder}
           rows={3}
           aria-describedby={hintId}
+          readOnly={readOnly}
         />
       ) : (
         <input
@@ -45,6 +50,7 @@ export function EditField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           aria-describedby={hintId}
+          readOnly={readOnly}
         />
       )}
       {hint && (

@@ -1,13 +1,23 @@
 import type { Itinerary } from '../types'
+import {
+  isoInputToTripDate,
+  tripDateToIsoInput,
+} from '../utils/dateFormat'
 import { EditField } from './EditField'
 
 interface HeroProps {
   itinerary: Itinerary
   isEditing: boolean
   onChange: (patch: Partial<Itinerary>) => void
+  dateNotice?: string | null
 }
 
-export function Hero({ itinerary, isEditing, onChange }: HeroProps) {
+export function Hero({
+  itinerary,
+  isEditing,
+  onChange,
+  dateNotice = null,
+}: HeroProps) {
   return (
     <header className="hero">
       <div className="hero__decor hero__decor--1" aria-hidden="true" />
@@ -16,6 +26,7 @@ export function Hero({ itinerary, isEditing, onChange }: HeroProps) {
         <p className="hero__eyebrow">JEJU · 3N 4D</p>
         {isEditing ? (
           <div className="hero__edit">
+            <p className="edit-section-label">기본 정보</p>
             <EditField
               label="여행 제목"
               value={itinerary.title}
@@ -30,15 +41,26 @@ export function Hero({ itinerary, isEditing, onChange }: HeroProps) {
             <div className="hero__edit-row">
               <EditField
                 label="시작일"
-                value={itinerary.startDate}
-                onChange={(startDate) => onChange({ startDate })}
+                type="date"
+                value={tripDateToIsoInput(itinerary.startDate)}
+                onChange={(iso) => {
+                  const next = isoInputToTripDate(iso)
+                  if (next) onChange({ startDate: next })
+                }}
               />
               <EditField
                 label="종료일"
-                value={itinerary.endDate}
-                onChange={(endDate) => onChange({ endDate })}
+                type="date"
+                value={tripDateToIsoInput(itinerary.endDate)}
+                onChange={(iso) => {
+                  const next = isoInputToTripDate(iso)
+                  if (next) onChange({ endDate: next })
+                }}
               />
             </div>
+            {dateNotice && (
+              <p className="hero__date-notice no-print">{dateNotice}</p>
+            )}
           </div>
         ) : (
           <>

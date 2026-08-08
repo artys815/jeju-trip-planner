@@ -15,6 +15,7 @@ export function TripSummary({ itinerary, isEditing, onChange }: TripSummaryProps
       </h2>
       {isEditing ? (
         <div className="trip-summary__edit">
+          <p className="edit-section-label">기본 정보</p>
           <EditField
             label="숙소"
             value={itinerary.accommodation}

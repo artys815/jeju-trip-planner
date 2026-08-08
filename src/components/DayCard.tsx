@@ -1,5 +1,9 @@
 import { createId, type Day, type ItineraryItem } from '../types'
 import {
+  dayDateToIsoInput,
+  isoInputToDayFields,
+} from '../utils/dateFormat'
+import {
   formatCountdown,
   type LiveDayStatus,
   type LiveRole,
@@ -9,6 +13,7 @@ import { ItineraryItemView } from './ItineraryItem'
 interface DayCardProps {
   day: Day
   dayNumber: number
+  startDate: string
   isEditing: boolean
   isFirst: boolean
   isLast: boolean
@@ -28,6 +33,7 @@ interface DayCardProps {
 export function DayCard({
   day,
   dayNumber,
+  startDate,
   isEditing,
   isFirst,
   isLast,
@@ -77,10 +83,12 @@ export function DayCard({
 
   const handleDeleteDay = () => {
     if (!canDelete) return
-    const label = day.date.trim() || day.area.trim() || `DAY ${dayNumber}`
+    const label = [day.date.trim(), day.weekday.trim() ? `(${day.weekday})` : '', day.theme.trim()]
+      .filter(Boolean)
+      .join(' ')
     if (
       window.confirm(
-        `「${label}」 날짜 일정을 삭제할까요? 이 날짜의 모든 일정도 함께 삭제됩니다.`,
+        `「${label || `DAY ${dayNumber}`}」 날짜 일정을 삭제할까요?\n이 날짜의 모든 일정도 함께 삭제됩니다.`,
       )
     ) {
       onDelete()
@@ -96,6 +104,8 @@ export function DayCard({
     return null
   }
 
+  const isoDate = dayDateToIsoInput(day.date, startDate)
+
   return (
     <article
       id={`day-${day.id}`}
@@ -108,31 +118,37 @@ export function DayCard({
         <div className="day-card__meta">
           {isEditing ? (
             <>
+              <p className="edit-section-label">DAY 정보</p>
               <div className="day-card__edit-meta">
-                <label>
-                  <span>날짜</span>
+                <label className="edit-field">
+                  <span className="edit-field__label">날짜</span>
                   <input
-                    value={day.date}
-                    onChange={(e) => onChangeDay({ date: e.target.value })}
+                    id={`day-date-${day.id}`}
+                    className="edit-field__input"
+                    type="date"
+                    value={isoDate}
+                    onChange={(e) => {
+                      const fields = isoInputToDayFields(e.target.value)
+                      if (fields) onChangeDay(fields)
+                    }}
                   />
                 </label>
-                <label>
-                  <span>요일</span>
+                <p className="day-card__weekday-readonly">
+                  요일: <strong>{day.weekday || '—'}</strong>
+                  <span className="edit-field__hint">날짜를 선택하면 자동으로 설정됩니다</span>
+                </p>
+                <label className="edit-field">
+                  <span className="edit-field__label">지역</span>
                   <input
-                    value={day.weekday}
-                    onChange={(e) => onChangeDay({ weekday: e.target.value })}
-                  />
-                </label>
-                <label>
-                  <span>지역</span>
-                  <input
+                    className="edit-field__input"
                     value={day.area}
                     onChange={(e) => onChangeDay({ area: e.target.value })}
                   />
                 </label>
-                <label>
-                  <span>테마</span>
+                <label className="edit-field">
+                  <span className="edit-field__label">테마</span>
                   <input
+                    className="edit-field__input"
                     value={day.theme}
                     onChange={(e) => onChangeDay({ theme: e.target.value })}
                   />

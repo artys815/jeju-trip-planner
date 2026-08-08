@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 
 interface ToolbarProps {
   isEditing: boolean
-  onToggleMode: () => void
+  hasUnsavedChanges: boolean
+  canSave: boolean
+  onStartEdit: () => void
+  onSave: () => void
+  onCancelEdit: () => void
   onExport: () => void
   onImport: (file: File) => void
   onReset: () => void
@@ -15,7 +19,11 @@ interface ToolbarProps {
 
 export function Toolbar({
   isEditing,
-  onToggleMode,
+  hasUnsavedChanges,
+  canSave,
+  onStartEdit,
+  onSave,
+  onCancelEdit,
   onExport,
   onImport,
   onReset,
@@ -42,14 +50,11 @@ export function Toolbar({
           aria-expanded={panelOpen}
           aria-controls="management-panel"
           onClick={() => {
-            if (isEditing) {
-              onToggleMode()
-              return
-            }
+            if (isEditing) return
             setOpen((value) => !value)
           }}
         >
-          {isEditing ? '← 여행 일정 보기' : panelOpen ? '관리 닫기' : '⚙ 관리'}
+          {isEditing ? '수정 중' : panelOpen ? '관리 닫기' : '⚙ 관리'}
         </button>
 
         {!panelOpen && (
@@ -61,27 +66,51 @@ export function Toolbar({
 
       {panelOpen && (
         <div id="management-panel" className="toolbar__panel">
-          <div className="toolbar__modes" role="group" aria-label="보기 모드">
-            <button
-              type="button"
-              className={`toolbar__mode ${!isEditing ? 'is-active' : ''}`}
-              onClick={() => isEditing && onToggleMode()}
-              aria-pressed={!isEditing}
-            >
-              여행 일정 보기
-            </button>
-            <button
-              type="button"
-              className={`toolbar__mode ${isEditing ? 'is-active' : ''}`}
-              onClick={() => {
-                if (!isEditing) onToggleMode()
-                setOpen(true)
-              }}
-              aria-pressed={isEditing}
-            >
-              일정 수정
-            </button>
-          </div>
+          {isEditing ? (
+            <div className="toolbar__edit-actions">
+              <p className="toolbar__edit-note">
+                저장 전에는 변경사항이 실제 일정에 반영되지 않습니다.
+              </p>
+              {hasUnsavedChanges && (
+                <p className="toolbar__unsaved" aria-live="polite">
+                  저장되지 않은 변경사항
+                </p>
+              )}
+              <div className="toolbar__actions">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={onSave}
+                  disabled={!canSave}
+                >
+                  저장하기
+                </button>
+                <button type="button" className="btn btn--ghost" onClick={onCancelEdit}>
+                  수정 취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="toolbar__modes" role="group" aria-label="보기 모드">
+              <button
+                type="button"
+                className="toolbar__mode is-active"
+                aria-pressed="true"
+              >
+                여행 일정 보기
+              </button>
+              <button
+                type="button"
+                className="toolbar__mode"
+                onClick={() => {
+                  onStartEdit()
+                  setOpen(true)
+                }}
+              >
+                일정 수정
+              </button>
+            </div>
+          )}
 
           <div className="toolbar__actions">
             <button type="button" className="btn btn--ghost" onClick={onExport}>
@@ -102,7 +131,12 @@ export function Toolbar({
             <button type="button" className="btn btn--ghost" onClick={onReset}>
               기본 일정 복원
             </button>
-            <button type="button" className="btn btn--primary" onClick={onPrint}>
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={onPrint}
+              disabled={isEditing}
+            >
               인쇄·PDF 저장
             </button>
           </div>
@@ -112,7 +146,7 @@ export function Toolbar({
             {!statusMessage && saveFlash && (
               <span className="toolbar__saved">저장됨</span>
             )}
-            {!statusMessage && !saveFlash && savedAt && (
+            {!statusMessage && !saveFlash && !isEditing && savedAt && (
               <span className="toolbar__saved-quiet">
                 자동 저장 ·{' '}
                 {savedAt.toLocaleTimeString('ko-KR', {
