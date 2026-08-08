@@ -906,9 +906,8 @@ a {
 
 .item__heading {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 0.55rem;
 }
 
@@ -959,11 +958,18 @@ a {
 }
 
 .item__actions {
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.item__actions-map {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  justify-content: flex-end;
-  max-width: 100%;
+  min-width: 0;
 }
 
 .item__action {
@@ -986,6 +992,7 @@ a {
 }
 
 .item__action--reserve {
+  width: 100%;
   background: rgba(224, 122, 58, 0.14);
   color: #b45a1f;
 }
@@ -1481,6 +1488,25 @@ a {
   .today-shortcut__button {
     width: auto;
     min-width: 8.5rem;
+  }
+
+  .item__heading {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .item__actions {
+    width: auto;
+    justify-items: end;
+  }
+
+  .item__actions-map {
+    justify-content: flex-end;
+  }
+
+  .item__action--reserve {
+    width: auto;
   }
 
   .item__edit-actions {

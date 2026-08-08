@@ -1,12 +1,15 @@
 import {
-  getMapSearchValue,
   isValidHttpUrl,
   ITEM_TYPES,
-  naverMapSearchUrl,
   type ItineraryItem as Item,
   type ItemType,
 } from '../types'
 import type { LiveRole } from '../utils/liveStatus'
+import {
+  getKakaoDirectionsUrl,
+  getKakaoMapUrl,
+  getMapDestination,
+} from '../utils/maps'
 import { EditField } from './EditField'
 
 const TYPE_ICON: Record<ItemType, string> = {
@@ -141,12 +144,13 @@ export function ItineraryItemView({
     )
   }
 
-  const searchValue = getMapSearchValue(item)
+  const destination = getMapDestination(item)
   const reservationUrl = item.reservationUrl?.trim() ?? ''
   const showReservation = isValidHttpUrl(reservationUrl)
   const travelTime = item.travelTime?.trim() ?? ''
   const preparation = item.preparation?.trim() ?? ''
-  const mapHref = searchValue ? naverMapSearchUrl(searchValue) : ''
+  const mapHref = destination ? getKakaoMapUrl(destination) : ''
+  const directionsHref = destination ? getKakaoDirectionsUrl(destination) : ''
 
   const liveClass =
     liveRole === 'current'
@@ -181,28 +185,28 @@ export function ItineraryItemView({
             )}
             <h4 className="item__title">{item.title}</h4>
           </div>
-          {(searchValue || showReservation) && (
+          {(destination || showReservation) && (
             <div className="item__actions no-print">
-              {searchValue && (
-                <a
-                  className="item__action"
-                  href={mapHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  지도
-                </a>
-              )}
-              {searchValue && (
-                <a
-                  className="item__action"
-                  href={mapHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="네이버지도에서 목적지를 연 뒤 길찾기를 이용할 수 있습니다"
-                >
-                  길찾기
-                </a>
+              {destination && (
+                <div className="item__actions-map">
+                  <a
+                    className="item__action"
+                    href={mapHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    지도
+                  </a>
+                  <a
+                    className="item__action"
+                    href={directionsHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="카카오맵에서 목적지를 연 뒤 길찾기를 이용할 수 있습니다"
+                  >
+                    길찾기
+                  </a>
+                </div>
               )}
               {showReservation && (
                 <a
