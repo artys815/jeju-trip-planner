@@ -1,4 +1,5 @@
 import type { Day, ItineraryItem } from '../types'
+import type { LiveAssistSnapshot } from '../hooks/useLiveTravelAssistant'
 import { formatCountdown } from '../utils/liveStatus'
 
 interface TodayShortcutProps {
@@ -8,6 +9,13 @@ interface TodayShortcutProps {
   nextItem: ItineraryItem | null
   minutesUntilNext: number | null
   onGoToLive: () => void
+  liveEnabled: boolean
+  liveLoading: boolean
+  liveError: string | null
+  liveSnapshot: LiveAssistSnapshot | null
+  onEnableLive: () => void
+  onRefreshLive: () => void
+  onDisableLive: () => void
 }
 
 export function TodayShortcut({
@@ -17,6 +25,13 @@ export function TodayShortcut({
   nextItem,
   minutesUntilNext,
   onGoToLive,
+  liveEnabled,
+  liveLoading,
+  liveError,
+  liveSnapshot,
+  onEnableLive,
+  onRefreshLive,
+  onDisableLive,
 }: TodayShortcutProps) {
   const countdown =
     minutesUntilNext === null ? null : formatCountdown(minutesUntilNext)
@@ -73,6 +88,79 @@ export function TodayShortcut({
             오늘은 DAY {dayNumber}
             {day.area ? ` · ${day.area}` : ''}
           </p>
+        )}
+
+        {nextItem && (
+          <div className="live-assist">
+            <p className="live-assist__privacy">
+              현재 위치는 다음 일정까지의 이동시간 계산에만 사용하며 저장하지 않습니다.
+            </p>
+
+            {!liveEnabled ? (
+              <button
+                type="button"
+                className="btn btn--ghost live-assist__enable"
+                onClick={onEnableLive}
+              >
+                실시간 이동 도우미 켜기
+              </button>
+            ) : (
+              <>
+                {liveLoading && !liveSnapshot && (
+                  <p className="live-assist__loading">이동시간을 계산하는 중…</p>
+                )}
+
+                {liveError && <p className="live-assist__error">{liveError}</p>}
+
+                {liveSnapshot && (
+                  <div className="live-assist__result">
+                    <p className="live-assist__eta">
+                      🚗 현재 예상 이동시간 약 {liveSnapshot.etaMinutes}분
+                    </p>
+                    <p className="live-assist__distance">
+                      📏 {liveSnapshot.distanceLabel}
+                    </p>
+                    <p className="live-assist__depart">
+                      ⏰ {liveSnapshot.recommendedDepartureLabel}까지 출발 권장
+                    </p>
+                    <p
+                      className={`live-assist__status live-assist__status--${liveSnapshot.status.toLowerCase()}`}
+                    >
+                      {liveSnapshot.statusMessage}
+                    </p>
+                  </div>
+                )}
+
+                <div className="live-assist__actions">
+                  {liveSnapshot?.directionsUrl && (
+                    <a
+                      className="btn btn--primary"
+                      href={liveSnapshot.directionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      길찾기
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={onRefreshLive}
+                    disabled={liveLoading}
+                  >
+                    {liveLoading ? '새로고침 중…' : '새로고침'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={onDisableLive}
+                  >
+                    끄기
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         )}
       </div>
 

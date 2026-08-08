@@ -714,6 +714,140 @@ a {
   font-weight: 600;
 }
 
+.live-assist {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(19, 101, 111, 0.12);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.live-assist__privacy {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.live-assist__enable {
+  width: 100%;
+  min-height: 2.75rem;
+}
+
+.live-assist__loading,
+.live-assist__error {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.live-assist__error {
+  color: var(--danger);
+}
+
+.live-assist__loading {
+  color: var(--teal-800);
+}
+
+.live-assist__result {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.live-assist__eta,
+.live-assist__distance,
+.live-assist__depart,
+.live-assist__status {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--teal-900);
+}
+
+.live-assist__status--safe {
+  color: var(--teal-700);
+}
+
+.live-assist__status--leave_soon {
+  color: #b45a1f;
+}
+
+.live-assist__status--leave_now {
+  color: #b45a1f;
+}
+
+.live-assist__status--late_risk {
+  color: var(--danger);
+}
+
+.live-assist__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.live-assist__actions .btn {
+  min-height: 2.5rem;
+}
+
+.live-sticky {
+  position: fixed;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 40;
+  display: flex;
+  gap: 0.4rem;
+  align-items: stretch;
+  padding: 0.45rem;
+  border-radius: 16px;
+  background: rgba(15, 79, 87, 0.94);
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(15, 79, 87, 0.28);
+}
+
+.live-sticky__main {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+}
+
+.live-sticky__text {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-sticky__close {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.55rem 0.7rem;
+}
+
+@media (min-width: 768px) {
+  .live-sticky {
+    display: none;
+  }
+
+  .live-assist__enable {
+    width: auto;
+  }
+}
+
 .day-card--orange { --accent: var(--orange); }
 .day-card--blue { --accent: var(--blue); }
 .day-card--teal { --accent: var(--teal); }
@@ -1717,6 +1851,8 @@ a {
   .item__live-badge,
   .today-shortcut,
   .today-status,
+  .live-assist,
+  .live-sticky,
   .day-card__collapse,
   .day-card__count {
     display: none !important;

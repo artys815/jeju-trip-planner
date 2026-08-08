@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChecklistSection } from './components/ChecklistSection'
 import { DayCard } from './components/DayCard'
 import { Hero } from './components/Hero'
+import { LiveStickyBar } from './components/LiveStickyBar'
 import { NoticeSection } from './components/NoticeSection'
 import { ResetModal } from './components/ResetModal'
 import { RestaurantSection } from './components/RestaurantSection'
 import { TodayShortcut } from './components/TodayShortcut'
 import { Toolbar } from './components/Toolbar'
 import { TripSummary } from './components/TripSummary'
+import { useLiveTravelAssistant } from './hooks/useLiveTravelAssistant'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useNow } from './hooks/useNow'
 import { isItinerary, type Day, type Itinerary } from './types'
@@ -26,6 +28,7 @@ export default function App() {
   const [highlightedDayId, setHighlightedDayId] = useState<string | null>(null)
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null)
   const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>({})
+  const [stickyHidden, setStickyHidden] = useState(false)
 
   useEffect(() => {
     if (!resetMessage) return
@@ -60,6 +63,8 @@ export default function App() {
     if (!todayDay) return null
     return getLiveDayStatus(todayDay.items, now)
   }, [todayDay, now])
+
+  const liveAssist = useLiveTravelAssistant(liveStatus?.nextItem ?? null, now)
 
   const expandDay = (dayId: string) => {
     setCollapsedDays((prev) => {
@@ -226,6 +231,16 @@ export default function App() {
             nextItem={liveStatus.nextItem}
             minutesUntilNext={liveStatus.minutesUntilNext}
             onGoToLive={goToLiveTarget}
+            liveEnabled={liveAssist.enabled}
+            liveLoading={liveAssist.loading}
+            liveError={liveAssist.errorMessage}
+            liveSnapshot={liveAssist.snapshot}
+            onEnableLive={liveAssist.enable}
+            onRefreshLive={liveAssist.refresh}
+            onDisableLive={() => {
+              liveAssist.disable()
+              setStickyHidden(false)
+            }}
           />
         )}
 
@@ -287,6 +302,21 @@ export default function App() {
         onContinue={() => setResetStep('confirm')}
         onConfirm={handleResetConfirm}
       />
+
+      {todayDay &&
+        liveStatus?.nextItem &&
+        liveAssist.enabled &&
+        liveAssist.snapshot &&
+        !stickyHidden && (
+          <LiveStickyBar
+            nextTime={liveStatus.nextItem.time}
+            nextTitle={liveStatus.nextItem.title}
+            etaMinutes={liveAssist.snapshot.etaMinutes}
+            recommendedDepartureLabel={liveAssist.snapshot.recommendedDepartureLabel}
+            onOpen={goToLiveTarget}
+            onClose={() => setStickyHidden(true)}
+          />
+        )}
     </div>
   )
 }

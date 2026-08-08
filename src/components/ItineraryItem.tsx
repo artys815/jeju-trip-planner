@@ -6,7 +6,7 @@ import {
 } from '../types'
 import type { LiveRole } from '../utils/liveStatus'
 import {
-  getKakaoDirectionsUrl,
+  getKakaoDirectionsUrlForItem,
   getKakaoMapUrl,
   getMapDestination,
 } from '../utils/maps'
@@ -150,7 +150,7 @@ export function ItineraryItemView({
   const travelTime = item.travelTime?.trim() ?? ''
   const preparation = item.preparation?.trim() ?? ''
   const mapHref = destination ? getKakaoMapUrl(destination) : ''
-  const directionsHref = destination ? getKakaoDirectionsUrl(destination) : ''
+  const directionsHref = destination ? getKakaoDirectionsUrlForItem(item) : ''
 
   const liveClass =
     liveRole === 'current'
@@ -202,7 +202,7 @@ export function ItineraryItemView({
                     href={directionsHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="카카오맵에서 목적지를 연 뒤 길찾기를 이용할 수 있습니다"
+                    title="카카오맵 길찾기"
                   >
                     길찾기
                   </a>

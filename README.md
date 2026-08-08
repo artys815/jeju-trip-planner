@@ -1,32 +1,40 @@
-# React + TypeScript + Vite
+# 제주 여행 일정 (Jeju Trip Planner)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Vite + React + TypeScript 기반의 모바일 친화 편집 가능 여행 일정 사이트입니다.
 
-Currently, two official plugins are available:
+## 로컬 실행
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+프론트엔드만:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+실시간 이동 도우미(`/api/geocode`, `/api/route`)까지 로컬에서 테스트하려면 Vercel CLI로 실행하세요.
+
+1. `.env.example`을 복사해 `.env.local` 생성
+2. `KAKAO_REST_API_KEY`에 Kakao Developers REST API 키 입력
+3. 실행:
+
+```bash
+npx vercel dev
+```
+
+`vercel dev`가 Vite 앱과 `/api/*` 서버리스 함수를 함께 제공합니다.
+
+## Vercel 환경 변수
+
+Vercel → Project → Settings → Environment Variables 에 추가:
+
+- Name: `KAKAO_REST_API_KEY`
+- Value: Kakao Developers에서 발급한 REST API 키
+- Environments: Production, Preview, Development
+
+비밀 키에 `VITE_` 접두사를 붙이지 마세요. 클라이언트 번들에 노출됩니다.
+
+## 빌드
+
+```bash
+npm run build
+```
