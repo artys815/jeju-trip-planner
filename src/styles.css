@@ -22,8 +22,10 @@
   --radius: 20px;
   --radius-sm: 14px;
   --max: 900px;
+  --page-pad: 1rem;
   --focus: 0 0 0 3px rgba(30, 138, 150, 0.35);
   font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 16px;
   color: var(--ink);
   background: var(--bg);
   line-height: 1.55;
@@ -40,15 +42,28 @@
 
 html {
   scroll-behavior: smooth;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
-  min-width: 320px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 40%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
   color: var(--ink);
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 button,
@@ -72,16 +87,21 @@ a {
 }
 
 .app {
+  width: 100%;
+  max-width: 100%;
   min-height: 100vh;
+  overflow-x: clip;
 }
 
 /* Hero */
 .hero {
   position: relative;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
   background: linear-gradient(145deg, var(--teal-900) 0%, var(--teal-800) 45%, var(--teal-700) 100%);
   color: #f7fbfb;
-  padding: 2.4rem 1.25rem 3.5rem;
+  padding: 2.2rem var(--page-pad) 3.4rem;
 }
 
 .hero__decor {
@@ -110,6 +130,7 @@ a {
 .hero__inner {
   position: relative;
   z-index: 1;
+  width: 100%;
   max-width: var(--max);
   margin: 0 auto;
 }
@@ -202,11 +223,13 @@ a {
 
 /* Main */
 .main {
-  width: min(100% - 2rem, var(--max));
+  width: 100%;
+  max-width: var(--max);
   margin: -0.5rem auto 0;
-  padding-bottom: 3rem;
+  padding: 0 var(--page-pad) 3rem;
   display: grid;
-  gap: 1.25rem;
+  gap: 1.1rem;
+  min-width: 0;
 }
 
 /* Toolbar */
@@ -217,6 +240,9 @@ a {
   display: grid;
   gap: 0.75rem;
   padding: 0.85rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: rgba(255, 252, 247, 0.92);
   border: 1px solid rgba(31, 42, 46, 0.06);
   border-radius: var(--radius);
@@ -236,10 +262,12 @@ a {
 .toolbar__mode {
   border: 0;
   border-radius: 11px;
-  padding: 0.7rem 0.5rem;
+  padding: 0.8rem 0.5rem;
+  min-height: 2.75rem;
   background: transparent;
   color: var(--ink-soft);
   font-weight: 600;
+  font-size: 0.92rem;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
@@ -250,9 +278,20 @@ a {
 }
 
 .toolbar__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.toolbar__actions .btn {
+  width: 100%;
+  min-height: 2.75rem;
+  font-size: 0.88rem;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
 }
 
 .toolbar__status {
@@ -317,9 +356,10 @@ a {
   gap: 0.35rem;
   border: 1px solid transparent;
   border-radius: 12px;
-  padding: 0.65rem 0.9rem;
+  padding: 0.7rem 0.9rem;
   font-weight: 600;
   font-size: 0.9rem;
+  min-height: 2.5rem;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
@@ -366,6 +406,20 @@ a {
   background: #fff7f7;
 }
 
+.btn--danger-solid {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn--danger-solid:hover:not(:disabled) {
+  background: #a83737;
+}
+
+.btn--danger-solid:disabled {
+  opacity: 0.4;
+}
+
 .btn--add {
   width: 100%;
   margin-top: 0.85rem;
@@ -383,7 +437,10 @@ a {
   background: var(--surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 1.35rem 1.2rem;
+  padding: 1.25rem 1rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .section__title {
@@ -415,8 +472,8 @@ a {
 /* Trip summary */
 .trip-summary__grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.9rem;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
   margin: 1rem 0 0;
 }
 
@@ -460,14 +517,19 @@ a {
 .days {
   display: grid;
   gap: 1.15rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .day-card {
   background: var(--surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 1.25rem 1.1rem 1.15rem;
+  padding: 1.15rem 0.95rem 1.05rem;
   border-left: 6px solid var(--accent, var(--teal-500));
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .day-card--orange { --accent: var(--orange); }
@@ -477,20 +539,22 @@ a {
 
 .day-card__header {
   display: flex;
-  gap: 0.9rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   align-items: flex-start;
   margin-bottom: 1rem;
+  min-width: 0;
 }
 
 .day-card__badge {
   flex: 0 0 auto;
-  min-width: 4.4rem;
+  min-width: 4.2rem;
   padding: 0.55rem 0.65rem;
   border-radius: 14px;
   background: color-mix(in srgb, var(--accent) 16%, white);
   color: var(--accent);
   font-family: Outfit, sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-align: center;
@@ -546,8 +610,10 @@ a {
 .day-card__day-actions .btn {
   width: 100%;
   min-width: 0;
-  min-height: 2.5rem;
-  white-space: nowrap;
+  min-height: 2.75rem;
+  white-space: normal;
+  line-height: 1.25;
+  font-size: 0.84rem;
 }
 
 .day-card__day-actions .btn--danger {
@@ -614,11 +680,14 @@ a {
 /* Items */
 .item {
   display: grid;
-  grid-template-columns: 4.6rem 1fr;
-  gap: 0.75rem;
-  padding: 0.85rem 0.7rem;
+  grid-template-columns: 4.4rem minmax(0, 1fr);
+  gap: 0.7rem;
+  padding: 0.85rem 0.65rem;
   border-radius: var(--radius-sm);
   background: linear-gradient(180deg, #fbfaf7 0%, #f7f3ec 100%);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .item--edit,
@@ -640,6 +709,11 @@ a {
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--teal-800);
+  min-width: 0;
+}
+
+.item__body {
+  min-width: 0;
 }
 
 .item__icon {
@@ -659,6 +733,7 @@ a {
   font-size: 1.02rem;
   font-weight: 800;
   letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
 }
 
 .item__desc {
@@ -666,14 +741,18 @@ a {
   color: var(--ink-soft);
   font-size: 0.92rem;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .item__map {
   flex: 0 0 auto;
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   font-weight: 700;
   text-decoration: none;
-  padding: 0.25rem 0.55rem;
+  padding: 0.4rem 0.7rem;
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
   border-radius: 999px;
   background: var(--teal-100);
   color: var(--teal-800);
@@ -702,8 +781,8 @@ a {
 .item__edit-actions .btn {
   width: 100%;
   min-width: 0;
-  min-height: 2.5rem;
-  white-space: nowrap;
+  min-height: 2.75rem;
+  white-space: normal;
 }
 
 /* Naver map recommendation */
@@ -886,7 +965,7 @@ a {
 .checklist__item .btn {
   flex: 0 0 auto;
   min-width: 3.5rem;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .checklist__item.is-checked span {
@@ -969,14 +1048,100 @@ a {
   margin: 0;
 }
 
+/* Reset confirmation modal */
+.reset-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.reset-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: rgba(20, 32, 36, 0.48);
+  cursor: pointer;
+}
+
+.reset-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 26rem);
+  max-height: min(90vh, 36rem);
+  overflow: auto;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 60px rgba(20, 32, 36, 0.28);
+  padding: 1.35rem 1.2rem 1.2rem;
+}
+
+.reset-modal__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.reset-modal__body {
+  margin: 0.75rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.reset-modal__body strong {
+  color: var(--danger);
+}
+
+.reset-modal__form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.reset-modal__form .edit-field {
+  margin-top: 0.25rem;
+}
+
+.reset-modal__actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  margin-top: 1.15rem;
+}
+
+.reset-modal__actions .btn {
+  width: 100%;
+  min-height: 2.85rem;
+}
+
+@media (min-width: 420px) {
+  .reset-modal__actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Tablet and up — view chrome + edit forms */
 @media (min-width: 768px) {
+  :root {
+    --page-pad: 1.5rem;
+  }
+
   .hero {
-    padding: 3.2rem 1.5rem 4.2rem;
+    padding: 3.2rem var(--page-pad) 4.2rem;
   }
 
   .hero__curve {
     height: 56px;
+  }
+
+  .section {
+    padding: 1.35rem 1.2rem;
   }
 
   .toolbar {
@@ -988,12 +1153,28 @@ a {
     min-width: 260px;
   }
 
+  .toolbar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .toolbar__actions .btn {
+    width: auto;
+    min-height: 2.5rem;
+    white-space: nowrap;
+  }
+
   .toolbar__status {
     text-align: right;
   }
 
   .hero__edit-row,
   .trip-summary__edit {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .trip-summary__grid {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -1044,6 +1225,7 @@ a {
     width: auto;
     min-width: 4.75rem;
     flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   .day-card__edit-meta {
@@ -1063,6 +1245,7 @@ a {
     min-width: 5.5rem;
     flex: 0 0 auto;
     grid-column: auto;
+    white-space: nowrap;
   }
 
   .restaurant-card__edit {
@@ -1175,7 +1358,8 @@ a {
   .footer,
   .btn--add,
   .hero__decor,
-  .hero__curve {
+  .hero__curve,
+  .reset-modal {
     display: none !important;
   }
 

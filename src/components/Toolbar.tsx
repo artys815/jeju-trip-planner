@@ -8,6 +8,7 @@ interface ToolbarProps {
   saveFlash: boolean
   savedAt: Date | null
   error: string | null
+  statusMessage?: string | null
 }
 
 export function Toolbar({
@@ -20,6 +21,7 @@ export function Toolbar({
   saveFlash,
   savedAt,
   error,
+  statusMessage = null,
 }: ToolbarProps) {
   return (
     <div className="toolbar no-print">
@@ -67,8 +69,9 @@ export function Toolbar({
       </div>
 
       <div className="toolbar__status" aria-live="polite">
-        {saveFlash && <span className="toolbar__saved">저장됨</span>}
-        {!saveFlash && savedAt && (
+        {statusMessage && <span className="toolbar__saved">{statusMessage}</span>}
+        {!statusMessage && saveFlash && <span className="toolbar__saved">저장됨</span>}
+        {!statusMessage && !saveFlash && savedAt && (
           <span className="toolbar__saved-quiet">
             자동 저장 ·{' '}
             {savedAt.toLocaleTimeString('ko-KR', {

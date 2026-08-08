@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChecklistSection } from './components/ChecklistSection'
 import { DayCard } from './components/DayCard'
 import { Hero } from './components/Hero'
 import { NoticeSection } from './components/NoticeSection'
+import { ResetModal } from './components/ResetModal'
 import { RestaurantSection } from './components/RestaurantSection'
 import { Toolbar } from './components/Toolbar'
 import { TripSummary } from './components/TripSummary'
@@ -16,6 +17,14 @@ export default function App() {
     useLocalStorage()
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [resetStep, setResetStep] = useState<'warn' | 'confirm' | null>(null)
+  const [resetMessage, setResetMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!resetMessage) return
+    const timer = window.setTimeout(() => setResetMessage(null), 3200)
+    return () => window.clearTimeout(timer)
+  }, [resetMessage])
 
   const patchItinerary = (patch: Partial<Itinerary>) => {
     setItinerary((prev) => ({ ...prev, ...patch }))
@@ -87,15 +96,13 @@ export default function App() {
     }
   }
 
-  const handleReset = () => {
-    if (
-      window.confirm(
-        '모든 수정 내용을 지우고 기본 일정으로 복원할까요? 이 작업은 되돌릴 수 없습니다.',
-      )
-    ) {
-      resetToDefault()
-      setError(null)
-    }
+  const closeResetModal = () => setResetStep(null)
+
+  const handleResetConfirm = () => {
+    resetToDefault()
+    setResetStep(null)
+    setError(null)
+    setResetMessage('기본 일정으로 복원되었습니다.')
   }
 
   return (
@@ -112,11 +119,12 @@ export default function App() {
           onToggleMode={() => setIsEditing((v) => !v)}
           onExport={handleExport}
           onImport={handleImport}
-          onReset={handleReset}
+          onReset={() => setResetStep('warn')}
           onPrint={() => window.print()}
           saveFlash={saveFlash}
           savedAt={savedAt}
           error={error}
+          statusMessage={resetMessage}
         />
 
         <TripSummary
@@ -171,6 +179,13 @@ export default function App() {
           <p>제주 친구 여행 일정 · 브라우저에 자동 저장됩니다</p>
         </footer>
       </main>
+
+      <ResetModal
+        step={resetStep}
+        onCancel={closeResetModal}
+        onContinue={() => setResetStep('confirm')}
+        onConfirm={handleResetConfirm}
+      />
     </div>
   )
 }
