@@ -106,3 +106,65 @@ export function isItinerary(value: unknown): value is Itinerary {
     Array.isArray(data.notices)
   )
 }
+
+export interface TripQuickLink {
+  label: string
+  url: string
+}
+
+export interface Trip {
+  id: string
+  name: string
+  createdAt: string
+  updatedAt: string
+  /** Phase-1 protection for the migrated production Jeju trip. */
+  protected?: boolean
+  quickLinks?: TripQuickLink[]
+  itinerary: Itinerary
+}
+
+export interface TripCollection {
+  version: 1
+  activeTripId: string | null
+  trips: Trip[]
+}
+
+function isQuickLink(value: unknown): value is TripQuickLink {
+  if (!value || typeof value !== 'object') return false
+  const data = value as Record<string, unknown>
+  return typeof data.label === 'string' && typeof data.url === 'string'
+}
+
+export function isTrip(value: unknown): value is Trip {
+  if (!value || typeof value !== 'object') return false
+  const data = value as Record<string, unknown>
+  if (
+    typeof data.id !== 'string' ||
+    typeof data.name !== 'string' ||
+    typeof data.createdAt !== 'string' ||
+    typeof data.updatedAt !== 'string' ||
+    !isItinerary(data.itinerary)
+  ) {
+    return false
+  }
+  if (data.protected !== undefined && typeof data.protected !== 'boolean') {
+    return false
+  }
+  if (data.quickLinks !== undefined) {
+    if (!Array.isArray(data.quickLinks) || !data.quickLinks.every(isQuickLink)) {
+      return false
+    }
+  }
+  return true
+}
+
+export function isTripCollection(value: unknown): value is TripCollection {
+  if (!value || typeof value !== 'object') return false
+  const data = value as Record<string, unknown>
+  if (data.version !== 1) return false
+  if (data.activeTripId !== null && typeof data.activeTripId !== 'string') {
+    return false
+  }
+  if (!Array.isArray(data.trips) || !data.trips.every(isTrip)) return false
+  return true
+}

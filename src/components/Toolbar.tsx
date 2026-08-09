@@ -11,6 +11,7 @@ interface ToolbarProps {
   onExport: () => void
   onImport: (file: File) => void
   onReset: () => void
+  resetLabel?: string
   onPrint: () => void
   saveFlash: boolean
   savedAt: Date | null
@@ -36,6 +37,7 @@ export function Toolbar({
   onExport,
   onImport,
   onReset,
+  resetLabel = '일정 초기화',
   onPrint,
   saveFlash,
   savedAt,
@@ -146,7 +148,7 @@ export function Toolbar({
               />
             </label>
             <button type="button" className="btn btn--ghost" onClick={onReset}>
-              기본 일정 복원
+              {resetLabel}
             </button>
             <button
               type="button"

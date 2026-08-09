@@ -1,6 +1,8 @@
-# 제주 여행 일정 (Jeju Trip Planner)
+# Travel Planner (Jeju-first)
 
-Vite + React + TypeScript 기반의 모바일 친화 편집 가능 여행 일정 사이트입니다.
+Vite + React + TypeScript 기반의 로컬 우선 멀티 여행 플래너입니다.
+
+기존 제주 일정은 첫 번째 production trip으로 안전하게 마이그레이션됩니다.
 
 ## 로컬 실행
 
@@ -21,7 +23,24 @@ npm run dev
 npx vercel dev
 ```
 
-`vercel dev`가 Vite 앱과 `/api/*` 서버리스 함수를 함께 제공합니다.
+## Storage keys
+
+| Key | Purpose |
+|-----|---------|
+| `travel-planner-trips-v1` | **Active** TripCollection (`version: 1`) |
+| `jeju-trip-itinerary-v1` | **Legacy backup** — copy-only migration source. Never deleted/overwritten after migration. |
+| `jeju-trip-itinerary-v1-backup-202608` | One-time safety copy of the legacy blob |
+| `jeju-trip-geocode-cache-v1` | Geocode cache (separate) |
+| `jeju-trip-weather-cache-v1` | Weather cache (separate) |
+
+After migration, edits save **only** to `travel-planner-trips-v1`.
+The legacy key remains an immutable emergency backup of the pre-migration Jeju itinerary.
+
+## Safety tests
+
+```bash
+npm run test:migration
+```
 
 ## Vercel 환경 변수
 

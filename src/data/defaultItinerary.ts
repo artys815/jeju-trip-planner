@@ -1,6 +1,7 @@
 import type { Itinerary } from '../types'
 
-export const STORAGE_KEY = 'jeju-trip-itinerary-v1'
+/** Legacy single-itinerary key — do not write after multi-trip migration. */
+export { LEGACY_ITINERARY_KEY as STORAGE_KEY } from './storageKeys'
 
 export const defaultItinerary: Itinerary = {
   title: '제주 3박 4일 친구들 여행 일정',

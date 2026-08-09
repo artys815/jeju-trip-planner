@@ -23,7 +23,11 @@ export function Hero({
       <div className="hero__decor hero__decor--1" aria-hidden="true" />
       <div className="hero__decor hero__decor--2" aria-hidden="true" />
       <div className="hero__inner">
-        <p className="hero__eyebrow">JEJU · 3N 4D</p>
+        <p className="hero__eyebrow">
+          {itinerary.days.length > 1
+            ? `${itinerary.days.length - 1}N ${itinerary.days.length}D`
+            : `${itinerary.days.length} DAY`}
+        </p>
         {isEditing ? (
           <div className="hero__edit">
             <p className="edit-section-label">기본 정보</p>

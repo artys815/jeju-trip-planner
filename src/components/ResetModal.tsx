@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 
 interface ResetModalProps {
   step: 'warn' | 'confirm' | null
+  mode?: 'jeju-default' | 'empty'
   onCancel: () => void
   onContinue: () => void
   onConfirm: () => void
@@ -9,7 +10,13 @@ interface ResetModalProps {
 
 const CONFIRM_WORD = '초기화'
 
-export function ResetModal({ step, onCancel, onContinue, onConfirm }: ResetModalProps) {
+export function ResetModal({
+  step,
+  mode = 'jeju-default',
+  onCancel,
+  onContinue,
+  onConfirm,
+}: ResetModalProps) {
   const titleId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const [typed, setTyped] = useState('')
@@ -40,6 +47,14 @@ export function ResetModal({ step, onCancel, onContinue, onConfirm }: ResetModal
   if (!step) return null
 
   const canReset = typed === CONFIRM_WORD
+  const title =
+    mode === 'jeju-default' ? '제주 기본 일정 복원' : '빈 일정으로 초기화'
+  const warnBody =
+    mode === 'jeju-default'
+      ? '현재 수정한 제주 여행 일정이 모두 삭제되고 제주 기본 일정으로 돌아갑니다. 이 작업은 되돌릴 수 없습니다.'
+      : '현재 여행의 일정을 모두 지우고 날짜만 남은 빈 일정으로 초기화합니다. 제주 기본 일정이 다른 여행에 들어가지 않습니다.'
+  const confirmAction =
+    mode === 'jeju-default' ? '제주 기본 일정으로 복원' : '빈 일정으로 초기화'
 
   return (
     <div className="reset-modal no-print" role="presentation">
@@ -58,13 +73,9 @@ export function ResetModal({ step, onCancel, onContinue, onConfirm }: ResetModal
         {step === 'warn' ? (
           <>
             <h2 id={titleId} className="reset-modal__title">
-              기본 일정 복원
+              {title}
             </h2>
-            <p className="reset-modal__body">
-              현재 수정한 여행 일정이 모두 삭제되고 처음 일정으로 돌아갑니다.
-              <br />
-              이 작업은 되돌릴 수 없습니다.
-            </p>
+            <p className="reset-modal__body">{warnBody}</p>
             <div className="reset-modal__actions">
               <button type="button" className="btn btn--ghost" onClick={onCancel}>
                 취소
@@ -113,7 +124,7 @@ export function ResetModal({ step, onCancel, onContinue, onConfirm }: ResetModal
                 className="btn btn--danger-solid"
                 disabled={!canReset}
               >
-                모든 일정 초기화
+                {confirmAction}
               </button>
             </div>
           </form>

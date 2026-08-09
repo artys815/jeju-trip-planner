@@ -12,6 +12,7 @@ import {
 import { resolveGeocodeDetailed } from '../utils/geocodeResolve'
 import { parseTimeToMinutes } from '../utils/liveStatus'
 import { getMapDestination } from '../utils/maps'
+import { isLikelyKoreaCoords } from '../utils/trips'
 
 const REFRESH_MS = 5 * 60 * 1000
 /** Session-only flag — never stores GPS or itinerary data. */
@@ -27,6 +28,7 @@ export type LiveAssistErrorCode =
   | 'GEOCODE_FAILED'
   | 'ADDRESS_NOT_FOUND'
   | 'GEOCODE_UPSTREAM_ERROR'
+  | 'REGION_UNSUPPORTED'
   | 'ROUTE_FAILED'
   | 'SERVER_MISCONFIGURED'
   | 'UNKNOWN'
@@ -77,6 +79,8 @@ function errorMessage(code: LiveAssistErrorCode): string {
       return '목적지 주소를 찾지 못했습니다. 지도 검색어를 확인해 주세요.'
     case 'GEOCODE_UPSTREAM_ERROR':
       return '위치 검색 서비스에 일시적으로 연결하지 못했습니다.'
+    case 'REGION_UNSUPPORTED':
+      return '현재 지역에서는 실시간 차량 이동시간을 지원하지 않습니다.'
     case 'ROUTE_FAILED':
       return '현재 이동시간을 불러오지 못했습니다.'
     case 'SERVER_MISCONFIGURED':
@@ -151,6 +155,12 @@ export function useLiveTravelAssistant(
         else if (geo.error === 'GEOCODE_UPSTREAM_ERROR')
           setErrorCode('GEOCODE_UPSTREAM_ERROR')
         else setErrorCode('GEOCODE_FAILED')
+        setSnapshot(null)
+        return
+      }
+
+      if (!isLikelyKoreaCoords(geo.lat, geo.lng)) {
+        setErrorCode('REGION_UNSUPPORTED')
         setSnapshot(null)
         return
       }
