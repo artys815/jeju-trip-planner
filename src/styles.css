@@ -1291,6 +1291,14 @@ a {
   line-height: 1.4;
 }
 
+.item__directions-note {
+  margin: 0.15rem 0 0;
+  color: #b45a1f;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .item__edit-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

@@ -47,6 +47,7 @@ export function ItineraryItemView({
   onMoveDown,
 }: ItineraryItemProps) {
   const [directionsBusy, setDirectionsBusy] = useState(false)
+  const [directionsNote, setDirectionsNote] = useState<string | null>(null)
 
   if (isEditing) {
     const hasMapQuery = Boolean(item.mapQuery.trim())
@@ -205,8 +206,13 @@ export function ItineraryItemView({
   const openDirections = async () => {
     if (!destination || directionsBusy) return
     setDirectionsBusy(true)
+    setDirectionsNote(null)
     try {
-      await openKakaoDirections(item)
+      const result = await openKakaoDirections(item)
+      if (result.message) {
+        setDirectionsNote(result.message)
+        window.setTimeout(() => setDirectionsNote(null), 4000)
+      }
     } finally {
       setDirectionsBusy(false)
     }
@@ -269,7 +275,7 @@ export function ItineraryItemView({
                 disabled={directionsBusy}
                 title="카카오맵 길찾기"
               >
-                {directionsBusy ? '위치 확인 중...' : '길찾기'}
+                {directionsBusy ? '현재 위치 확인 중...' : '길찾기'}
               </button>
             )}
             {showReservation && (
@@ -283,6 +289,11 @@ export function ItineraryItemView({
               </a>
             )}
           </div>
+        )}
+        {directionsNote && (
+          <p className="item__directions-note no-print" role="status">
+            {directionsNote}
+          </p>
         )}
       </div>
     </li>

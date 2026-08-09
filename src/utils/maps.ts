@@ -2,6 +2,18 @@ import type { ItineraryItem } from '../types'
 import { getCachedGeocode } from './geocodeCache'
 import { resolveGeocode } from './geocodeResolve'
 
+export type OpenDirectionsResult = {
+  /** True when a Kakao URL was opened. */
+  opened: boolean
+  /**
+   * Optional short UI message (e.g. permission denied).
+   * Never includes GPS coordinates.
+   */
+  message?: string
+  /** Exact URL opened, for diagnostics — no origin stored elsewhere. */
+  url?: string
+}
+
 /**
  * Destination text for map/navigation actions.
  * Priority: non-empty address, then mapQuery.
@@ -23,8 +35,7 @@ export function getKakaoMapUrl(destination: string): string {
 }
 
 /**
- * Official Kakao web “directions destination” link (PC / HTTPS fallback).
- * Sets the destination; Kakao UI may still ask the user to confirm 길찾기.
+ * Official Kakao web “directions destination” link (HTTPS fallback).
  * https://map.kakao.com/link/to/{name},{lat},{lng}
  */
 export function getKakaoWebDirectionsUrl(
@@ -37,28 +48,27 @@ export function getKakaoWebDirectionsUrl(
 }
 
 /**
- * Official Kakao Map mobile/app route scheme with destination only.
- * Documented pattern: kakaomap://route?sp=…&ep=…&by=car
- * and mobile web: http://m.map.kakao.com/scheme/route?…
- *
- * Using `ep` (end point) alone is the practical destination-first handoff
- * so Kakao Map can use the device’s current location as the start.
- * We do not invent undocumented query keys.
+ * Official Kakao Map app route scheme (start + end).
+ * kakaomap://route?sp={lat},{lng}&ep={lat},{lng}&by=car
  *
  * @see https://apis.map.kakao.com/android_v2/docs/api-guide/urlscheme/
  */
-export function getKakaoAppRouteUrl(coords: {
-  lat: number
-  lng: number
-}): string {
-  return `kakaomap://route?ep=${coords.lat},${coords.lng}&by=car`
+export function getKakaoAppRouteUrl(
+  origin: { lat: number; lng: number },
+  destination: { lat: number; lng: number },
+): string {
+  return `kakaomap://route?sp=${origin.lat},${origin.lng}&ep=${destination.lat},${destination.lng}&by=car`
 }
 
-export function getKakaoMobileWebRouteUrl(coords: {
-  lat: number
-  lng: number
-}): string {
-  return `https://m.map.kakao.com/scheme/route?ep=${coords.lat},${coords.lng}&by=car`
+/**
+ * Official Kakao Map mobile-web route scheme (start + end).
+ * https://m.map.kakao.com/scheme/route?sp={lat},{lng}&ep={lat},{lng}&by=car
+ */
+export function getKakaoMobileWebRouteUrl(
+  origin: { lat: number; lng: number },
+  destination: { lat: number; lng: number },
+): string {
+  return `https://m.map.kakao.com/scheme/route?sp=${origin.lat},${origin.lng}&ep=${destination.lat},${destination.lng}&by=car`
 }
 
 export function getKakaoDirectionsUrl(
@@ -86,54 +96,80 @@ export function getKakaoDirectionsUrlForItem(
   )
 }
 
-function isMobileUserAgent(): boolean {
-  if (typeof navigator === 'undefined') return false
-  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+function getBrowserPosition(): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(Object.assign(new Error('UNSUPPORTED'), { code: -1 }))
+      return
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: false,
+      timeout: 12_000,
+      maximumAge: 60_000,
+    })
+  })
+}
+
+function openUrl(url: string): boolean {
+  const opened = window.open(url, '_blank', 'noopener,noreferrer')
+  return Boolean(opened)
 }
 
 /**
- * Open Kakao directions for a destination.
+ * Open Kakao car directions: current device location → destination.
  *
- * Mobile: prefer official scheme route URLs so Kakao Map opens a directions
- * flow with the destination pre-filled (start = current location in the app).
- * Desktop / fallback: official /link/to HTTPS destination link.
- * Geocode failure: Kakao search (same as 지도) — never invent coordinates.
+ * 1. Resolve destination (cache → /api/geocode)
+ * 2. Request browser GPS (not stored)
+ * 3. Open official route scheme with both sp and ep
+ * 4. Permission denied → /link/to destination-only fallback
+ * 5. Geocode failure → Kakao search
  */
 export async function openKakaoDirections(
   item: Pick<ItineraryItem, 'mapQuery' | 'address' | 'title'>,
-): Promise<void> {
+): Promise<OpenDirectionsResult> {
   const destination = getMapDestination(item)
-  if (!destination) return
+  if (!destination) return { opened: false }
 
   const geo = await resolveGeocode(destination)
   if (!geo) {
-    window.open(getKakaoMapUrl(destination), '_blank', 'noopener,noreferrer')
-    return
+    const url = getKakaoMapUrl(destination)
+    openUrl(url)
+    return { opened: true, url }
   }
 
-  const coords = { lat: geo.lat, lng: geo.lng }
-  const webFallback = getKakaoWebDirectionsUrl(destination, coords, item.title)
+  const dest = { lat: geo.lat, lng: geo.lng }
 
-  if (isMobileUserAgent()) {
-    // Official mobile-web scheme → hands off to Kakao Map app when installed.
-    // Destination-only `ep` lets Kakao use the device current location as start.
-    // Open in a new tab so this itinerary SPA is not navigated away.
-    // Fallback: HTTPS /link/to destination directions page.
-    const opened = window.open(
-      getKakaoMobileWebRouteUrl(coords),
-      '_blank',
-      'noopener,noreferrer',
-    )
-    if (!opened) {
-      window.open(webFallback, '_blank', 'noopener,noreferrer')
+  try {
+    const position = await getBrowserPosition()
+    const origin = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
     }
-    return
-  }
 
-  window.open(webFallback, '_blank', 'noopener,noreferrer')
+    // GPS is used only to build this URL — never persisted.
+    const routeUrl = getKakaoMobileWebRouteUrl(origin, dest)
+    const opened = openUrl(routeUrl)
+    if (!opened) {
+      // Popup blocked — try app scheme as last gesture-tied attempt.
+      openUrl(getKakaoAppRouteUrl(origin, dest))
+    }
+    return { opened: true, url: routeUrl }
+  } catch (err) {
+    const geoErr = err as GeolocationPositionError
+    const denied = typeof geoErr?.code === 'number' && geoErr.code === 1
+    const url = getKakaoWebDirectionsUrl(destination, dest, item.title)
+    openUrl(url)
+    return {
+      opened: true,
+      url,
+      message: denied
+        ? '현재 위치 권한이 없어 목적지만 열었습니다.'
+        : '현재 위치를 가져오지 못해 목적지만 열었습니다.',
+    }
+  }
 }
 
-/** @deprecated Prefer openKakaoDirections — kept for callers that need a URL string. */
+/** Resolve a directions URL string (destination-only; no GPS). */
 export async function resolveKakaoDirectionsUrl(
   item: Pick<ItineraryItem, 'mapQuery' | 'address' | 'title'>,
 ): Promise<string> {
@@ -141,8 +177,5 @@ export async function resolveKakaoDirectionsUrl(
   if (!destination) return ''
   const geo = await resolveGeocode(destination)
   if (!geo) return getKakaoMapUrl(destination)
-  if (isMobileUserAgent()) {
-    return getKakaoMobileWebRouteUrl(geo)
-  }
   return getKakaoWebDirectionsUrl(destination, geo, item.title)
 }
