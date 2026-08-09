@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   isValidHttpUrl,
   ITEM_TYPES,
@@ -7,7 +6,7 @@ import {
 } from '../types'
 import { timeToInputValue } from '../utils/dateFormat'
 import type { LiveRole } from '../utils/liveStatus'
-import { getKakaoMapUrl, getMapDestination, openKakaoDirections } from '../utils/maps'
+import { getKakaoMapUrl, getMapDestination } from '../utils/maps'
 import { EditField } from './EditField'
 
 const TYPE_ICON: Record<ItemType, string> = {
@@ -46,9 +45,6 @@ export function ItineraryItemView({
   onMoveUp,
   onMoveDown,
 }: ItineraryItemProps) {
-  const [directionsBusy, setDirectionsBusy] = useState(false)
-  const [directionsNote, setDirectionsNote] = useState<string | null>(null)
-
   if (isEditing) {
     const hasMapQuery = Boolean(item.mapQuery.trim())
     const hasAddress = Boolean(item.address?.trim())
@@ -203,21 +199,6 @@ export function ItineraryItemView({
         ? ' item--live-next'
         : ''
 
-  const openDirections = async () => {
-    if (!destination || directionsBusy) return
-    setDirectionsBusy(true)
-    setDirectionsNote(null)
-    try {
-      const result = await openKakaoDirections(item)
-      if (result.message) {
-        setDirectionsNote(result.message)
-        window.setTimeout(() => setDirectionsNote(null), 4000)
-      }
-    } finally {
-      setDirectionsBusy(false)
-    }
-  }
-
   return (
     <li
       id={`item-${item.id}`}
@@ -267,17 +248,6 @@ export function ItineraryItemView({
                 지도
               </a>
             )}
-            {destination && (
-              <button
-                type="button"
-                className="item__action item__action--button"
-                onClick={() => void openDirections()}
-                disabled={directionsBusy}
-                title="카카오맵 길찾기"
-              >
-                {directionsBusy ? '현재 위치 확인 중...' : '길찾기'}
-              </button>
-            )}
             {showReservation && (
               <a
                 className="item__action item__action--reserve"
@@ -289,11 +259,6 @@ export function ItineraryItemView({
               </a>
             )}
           </div>
-        )}
-        {directionsNote && (
-          <p className="item__directions-note no-print" role="status">
-            {directionsNote}
-          </p>
         )}
       </div>
     </li>
