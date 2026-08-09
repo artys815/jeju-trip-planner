@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { Day } from '../types'
 
 interface ToolbarProps {
   isEditing: boolean
@@ -15,6 +16,14 @@ interface ToolbarProps {
   savedAt: Date | null
   error: string | null
   statusMessage?: string | null
+  days: Day[]
+  testModeEnabled: boolean
+  testDayId: string
+  testTime: string
+  onEnableTestMode: () => void
+  onDisableTestMode: () => void
+  onChangeTestDayId: (dayId: string) => void
+  onChangeTestTime: (time: string) => void
 }
 
 export function Toolbar({
@@ -32,6 +41,14 @@ export function Toolbar({
   savedAt,
   error,
   statusMessage = null,
+  days,
+  testModeEnabled,
+  testDayId,
+  testTime,
+  onEnableTestMode,
+  onDisableTestMode,
+  onChangeTestDayId,
+  onChangeTestTime,
 }: ToolbarProps) {
   const [open, setOpen] = useState(false)
 
@@ -140,6 +157,56 @@ export function Toolbar({
               인쇄·PDF 저장
             </button>
           </div>
+
+          {!isEditing && (
+            <div className="toolbar__test-mode">
+              <p className="toolbar__edit-note">
+                라이브 기능 테스트 · 실제 일정 날짜를 바꾸지 않습니다
+              </p>
+              {!testModeEnabled ? (
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  onClick={onEnableTestMode}
+                >
+                  라이브 기능 테스트
+                </button>
+              ) : (
+                <div className="toolbar__test-controls">
+                  <label className="edit-field">
+                    <span className="edit-field__label">테스트 DAY</span>
+                    <select
+                      className="edit-field__input"
+                      value={testDayId}
+                      onChange={(e) => onChangeTestDayId(e.target.value)}
+                    >
+                      {days.map((day, index) => (
+                        <option key={day.id} value={day.id}>
+                          DAY {index + 1} · {day.date} ({day.weekday})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="edit-field">
+                    <span className="edit-field__label">시뮬레이션 시각</span>
+                    <input
+                      className="edit-field__input"
+                      type="time"
+                      value={testTime}
+                      onChange={(e) => onChangeTestTime(e.target.value)}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={onDisableTestMode}
+                  >
+                    테스트 종료
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="toolbar__status" aria-live="polite">
             {statusMessage && <span className="toolbar__saved">{statusMessage}</span>}

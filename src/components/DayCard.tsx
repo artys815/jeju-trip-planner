@@ -1,4 +1,8 @@
 import { createId, type Day, type ItineraryItem } from '../types'
+import type {
+  DayWeatherView,
+  ItemWeatherView,
+} from '../hooks/useItineraryWeather'
 import {
   dayDateToIsoInput,
   isoInputToDayFields,
@@ -9,6 +13,7 @@ import {
   type LiveRole,
 } from '../utils/liveStatus'
 import { ItineraryItemView } from './ItineraryItem'
+import { DayWeatherChip } from './WeatherChip'
 
 interface DayCardProps {
   day: Day
@@ -23,6 +28,8 @@ interface DayCardProps {
   collapsed?: boolean
   onToggleCollapse?: () => void
   liveStatus?: LiveDayStatus | null
+  dayWeather?: DayWeatherView | null
+  itemWeather?: Record<string, ItemWeatherView | null>
   onChangeDay: (patch: Partial<Day>) => void
   onChangeItems: (items: ItineraryItem[]) => void
   onMoveUp: () => void
@@ -43,6 +50,8 @@ export function DayCard({
   collapsed = false,
   onToggleCollapse,
   liveStatus = null,
+  dayWeather = null,
+  itemWeather = {},
   onChangeDay,
   onChangeItems,
   onMoveUp,
@@ -190,6 +199,7 @@ export function DayCard({
                 </p>
                 <h3 className="day-card__theme">{day.theme}</h3>
                 <p className="day-card__area">{day.area}</p>
+                {dayWeather && <DayWeatherChip weather={dayWeather} />}
                 {isCollapsed && (
                   <p className="day-card__count">일정 {day.items.length}개</p>
                 )}
@@ -227,6 +237,7 @@ export function DayCard({
                   : null
               }
               highlighted={highlightedItemId === item.id}
+              weather={itemWeather[item.id] ?? null}
               onChange={(patch) => updateItem(index, patch)}
               onDelete={() => deleteItem(index)}
               onMoveUp={() => moveItem(index, -1)}

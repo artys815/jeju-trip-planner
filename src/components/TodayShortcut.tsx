@@ -1,6 +1,8 @@
 import type { Day, ItineraryItem } from '../types'
 import type { LiveAssistSnapshot } from '../hooks/useLiveTravelAssistant'
+import type { ItemWeatherView } from '../hooks/useItineraryWeather'
 import { formatCountdown } from '../utils/liveStatus'
+import { LiveWeatherSnippet } from './WeatherChip'
 
 interface TodayShortcutProps {
   day: Day
@@ -16,6 +18,9 @@ interface TodayShortcutProps {
   onEnableLive: () => void
   onRefreshLive: () => void
   onDisableLive: () => void
+  isTestMode?: boolean
+  currentWeather?: ItemWeatherView | null
+  nextWeather?: ItemWeatherView | null
 }
 
 export function TodayShortcut({
@@ -32,6 +37,9 @@ export function TodayShortcut({
   onEnableLive,
   onRefreshLive,
   onDisableLive,
+  isTestMode = false,
+  currentWeather = null,
+  nextWeather = null,
 }: TodayShortcutProps) {
   const countdown =
     minutesUntilNext === null ? null : formatCountdown(minutesUntilNext)
@@ -42,7 +50,7 @@ export function TodayShortcut({
     <aside className="today-shortcut no-print" aria-label="오늘 일정 상태">
       <div className="today-shortcut__copy">
         <p className="today-shortcut__label">
-          DAY {dayNumber} · 오늘의 일정
+          DAY {dayNumber} · {isTestMode ? '테스트 일정' : '오늘의 일정'}
           {day.area ? ` · ${day.area}` : ''}
         </p>
 
@@ -52,6 +60,7 @@ export function TodayShortcut({
               <span className="today-status__badge today-status__badge--now">지금</span>
               <p className="today-status__title">{currentItem.title}</p>
               <p className="today-status__time">{currentItem.time}</p>
+              <LiveWeatherSnippet weather={currentWeather} />
             </div>
             <div className="today-status__block">
               {nextItem ? (
@@ -65,6 +74,7 @@ export function TodayShortcut({
                   {countdown && (
                     <p className="today-status__countdown">{countdown}</p>
                   )}
+                  <LiveWeatherSnippet weather={nextWeather} />
                 </>
               ) : (
                 <p className="today-status__quiet">오늘의 마지막 일정입니다.</p>
@@ -81,11 +91,12 @@ export function TodayShortcut({
                 {nextItem.time}
               </p>
               {countdown && <p className="today-status__countdown">{countdown}</p>}
+              <LiveWeatherSnippet weather={nextWeather} />
             </div>
           </div>
         ) : (
           <p className="today-shortcut__title">
-            오늘은 DAY {dayNumber}
+            {isTestMode ? '테스트' : '오늘'}은 DAY {dayNumber}
             {day.area ? ` · ${day.area}` : ''}
           </p>
         )}
@@ -94,6 +105,9 @@ export function TodayShortcut({
           <div className="live-assist">
             <p className="live-assist__privacy">
               현재 위치는 다음 일정까지의 이동시간 계산에만 사용하며 저장하지 않습니다.
+              {isTestMode
+                ? ' 테스트 모드에서는 실제 GPS와 시뮬레이션 시각을 함께 사용합니다.'
+                : ''}
             </p>
 
             {!liveEnabled ? (
@@ -122,11 +136,13 @@ export function TodayShortcut({
                     </p>
                     <p className="live-assist__depart">
                       ⏰ {liveSnapshot.recommendedDepartureLabel}까지 출발 권장
+                      {isTestMode ? ' (시뮬레이션 시각 기준)' : ''}
                     </p>
                     <p
                       className={`live-assist__status live-assist__status--${liveSnapshot.status.toLowerCase()}`}
                     >
                       {liveSnapshot.statusMessage}
+                      {isTestMode ? ' · 테스트' : ''}
                     </p>
                   </div>
                 )}

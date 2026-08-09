@@ -4,12 +4,18 @@ import { DayCard } from './components/DayCard'
 import { EditActionsBar } from './components/EditActionsBar'
 import { Hero } from './components/Hero'
 import { LiveStickyBar } from './components/LiveStickyBar'
+import { LiveTestBanner } from './components/LiveTestBanner'
 import { NoticeSection } from './components/NoticeSection'
 import { ResetModal } from './components/ResetModal'
 import { RestaurantSection } from './components/RestaurantSection'
 import { TodayShortcut } from './components/TodayShortcut'
 import { Toolbar } from './components/Toolbar'
 import { TripSummary } from './components/TripSummary'
+import { useItineraryWeather } from './hooks/useItineraryWeather'
+import {
+  buildSimulatedNow,
+  useLiveTestMode,
+} from './hooks/useLiveTestMode'
 import { useLiveTravelAssistant } from './hooks/useLiveTravelAssistant'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useNow } from './hooks/useNow'
@@ -76,20 +82,50 @@ export default function App() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [isEditing, hasUnsavedChanges])
 
-  // Live status always uses committed itinerary (not unsaved draft).
-  const todayDayIndex = useMemo(
+  const testMode = useLiveTestMode(itinerary.days)
+
+  // Weather uses committed itinerary dates/locations (not draft, not simulated clock).
+  const weather = useItineraryWeather(itinerary, !isEditing)
+
+  const simulatedNow = useMemo(() => {
+    if (!testMode.enabled || !testMode.selectedDay) return null
+    return buildSimulatedNow(
+      testMode.selectedDay,
+      itinerary.startDate,
+      testMode.time,
+    )
+  }, [
+    testMode.enabled,
+    testMode.selectedDay,
+    testMode.time,
+    itinerary.startDate,
+  ])
+
+  // Live status uses committed itinerary. Test mode substitutes day + clock only.
+  const realTodayIndex = useMemo(
     () => findTodayDayIndex(itinerary.days, itinerary.startDate, now),
     [itinerary.days, itinerary.startDate, now],
   )
 
+  const todayDayIndex = useMemo(() => {
+    if (testMode.enabled && testMode.dayId) {
+      return itinerary.days.findIndex((day) => day.id === testMode.dayId)
+    }
+    return realTodayIndex
+  }, [testMode.enabled, testMode.dayId, itinerary.days, realTodayIndex])
+
   const todayDay = todayDayIndex >= 0 ? itinerary.days[todayDayIndex] : null
+  const liveClock = simulatedNow ?? now
 
   const liveStatus = useMemo(() => {
     if (!todayDay) return null
-    return getLiveDayStatus(todayDay.items, now)
-  }, [todayDay, now])
+    return getLiveDayStatus(todayDay.items, liveClock)
+  }, [todayDay, liveClock])
 
-  const liveAssist = useLiveTravelAssistant(liveStatus?.nextItem ?? null, now)
+  const liveAssist = useLiveTravelAssistant(
+    liveStatus?.nextItem ?? null,
+    liveClock,
+  )
 
   const tripYearNotice = useMemo(() => {
     if (!isEditing || !draft) return null
@@ -303,7 +339,9 @@ export default function App() {
     setResetMessage('기본 일정으로 복원되었습니다.')
   }
 
-  const showTravelDayLive = Boolean(todayDay && liveStatus && !isEditing)
+  const showTravelDayLive = Boolean(
+    todayDay && liveStatus && !isEditing && (realTodayIndex >= 0 || testMode.enabled),
+  )
   const showStickyBar = Boolean(
     todayDay && liveStatus?.nextItem && !isEditing && !stickyHidden,
   )
@@ -326,6 +364,14 @@ export default function App() {
       />
 
       <main className="main">
+        {testMode.enabled && !isEditing && todayDay && (
+          <LiveTestBanner
+            dayLabel={`DAY ${todayDayIndex + 1} · ${todayDay.date}`}
+            time={testMode.time}
+            onExit={testMode.disable}
+          />
+        )}
+
         {showTravelDayLive && todayDay && liveStatus && (
           <TodayShortcut
             day={todayDay}
@@ -344,6 +390,17 @@ export default function App() {
               liveAssist.disable()
               setStickyHidden(false)
             }}
+            isTestMode={testMode.enabled}
+            currentWeather={
+              liveStatus.currentItem
+                ? weather.itemWeather[liveStatus.currentItem.id] ?? null
+                : null
+            }
+            nextWeather={
+              liveStatus.nextItem
+                ? weather.itemWeather[liveStatus.nextItem.id] ?? null
+                : null
+            }
           />
         )}
 
@@ -362,6 +419,21 @@ export default function App() {
           savedAt={savedAt}
           error={error}
           statusMessage={resetMessage}
+          days={itinerary.days}
+          testModeEnabled={testMode.enabled}
+          testDayId={testMode.dayId}
+          testTime={testMode.time}
+          onEnableTestMode={() =>
+            testMode.enable(
+              realTodayIndex >= 0
+                ? itinerary.days[realTodayIndex]?.id
+                : itinerary.days[0]?.id,
+              '11:00',
+            )
+          }
+          onDisableTestMode={testMode.disable}
+          onChangeTestDayId={testMode.setDayId}
+          onChangeTestTime={testMode.setTime}
         />
 
         <TripSummary
@@ -388,6 +460,10 @@ export default function App() {
               liveStatus={
                 !isEditing && index === todayDayIndex ? liveStatus : null
               }
+              dayWeather={
+                !isEditing ? weather.dayWeather[day.id] ?? null : null
+              }
+              itemWeather={!isEditing ? weather.itemWeather : {}}
               onChangeDay={(patch) => updateDay(index, patch)}
               onChangeItems={(items) => updateDay(index, { items })}
               onMoveUp={() => moveDay(index, -1)}

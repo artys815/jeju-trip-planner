@@ -239,6 +239,35 @@ export function useLiveTravelAssistant(
     void runFetch()
   }, [enabled, runFetch])
 
+  // Recalculate departure status when the clock changes (incl. test-mode simulated time)
+  // without re-requesting GPS/route.
+  useEffect(() => {
+    if (!enabled || !nextItem) return
+    const nextStart = parseTimeToMinutes(nextItem.time)
+    if (nextStart === null) return
+
+    setSnapshot((prev) => {
+      if (!prev) return prev
+      const nowMinutes = now.getHours() * 60 + now.getMinutes()
+      const recommended = getRecommendedDepartureMinutes(
+        nextStart,
+        prev.etaMinutes,
+      )
+      const status = getArrivalStatus(
+        nowMinutes,
+        recommended,
+        nextStart,
+        prev.etaMinutes,
+      )
+      return {
+        ...prev,
+        recommendedDepartureLabel: formatClockMinutes(recommended),
+        status,
+        statusMessage: arrivalStatusMessage(status),
+      }
+    })
+  }, [enabled, nextItem, now])
+
   useEffect(() => {
     if (!enabled) return
 

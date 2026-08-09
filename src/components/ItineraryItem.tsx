@@ -4,10 +4,12 @@ import {
   type ItineraryItem as Item,
   type ItemType,
 } from '../types'
+import type { ItemWeatherView } from '../hooks/useItineraryWeather'
 import { timeToInputValue } from '../utils/dateFormat'
 import type { LiveRole } from '../utils/liveStatus'
 import { getKakaoMapUrl, getMapDestination } from '../utils/maps'
 import { EditField } from './EditField'
+import { ItemWeatherChip } from './WeatherChip'
 
 const TYPE_ICON: Record<ItemType, string> = {
   travel: '🚗',
@@ -26,6 +28,7 @@ interface ItineraryItemProps {
   liveRole?: LiveRole | null
   liveCountdown?: string | null
   highlighted?: boolean
+  weather?: ItemWeatherView | null
   onChange: (patch: Partial<Item>) => void
   onDelete: () => void
   onMoveUp: () => void
@@ -40,6 +43,7 @@ export function ItineraryItemView({
   liveRole = null,
   liveCountdown = null,
   highlighted = false,
+  weather = null,
   onChange,
   onDelete,
   onMoveUp,
@@ -124,7 +128,7 @@ export function ItineraryItemView({
             />
             {showAddressHint && (
               <p className="item__address-hint no-print">
-                정확한 주소를 입력하면 이동시간 계산이 더 정확해집니다.
+                정확한 주소를 입력하면 이동시간과 날씨 정보가 더 정확해집니다.
               </p>
             )}
           </div>
@@ -222,6 +226,8 @@ export function ItineraryItemView({
           )}
           <h4 className="item__title">{item.title}</h4>
         </div>
+
+        {weather && <ItemWeatherChip weather={weather} />}
 
         {(travelTime || item.description || preparation) && (
           <div className="item__meta">
