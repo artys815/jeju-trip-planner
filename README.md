@@ -33,6 +33,13 @@ Vercel → Project → Settings → Environment Variables 에 추가:
 
 비밀 키에 `VITE_` 접두사를 붙이지 마세요. 클라이언트 번들에 노출됩니다.
 
+배포 후 키 설정 여부만 확인하려면 (키 값은 노출되지 않음):
+
+```text
+GET /api/diag
+→ { "ok": true, "kakaoConfigured": true|false, "nodeVersion": "..." }
+```
+
 ## 빌드
 
 ```bash

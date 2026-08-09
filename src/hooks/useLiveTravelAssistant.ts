@@ -9,7 +9,7 @@ import {
   getRecommendedDepartureMinutes,
   type ArrivalStatus,
 } from '../utils/eta'
-import { resolveGeocode } from '../utils/geocodeResolve'
+import { resolveGeocodeDetailed } from '../utils/geocodeResolve'
 import { parseTimeToMinutes } from '../utils/liveStatus'
 import { getMapDestination } from '../utils/maps'
 
@@ -25,6 +25,8 @@ export type LiveAssistErrorCode =
   | 'NO_NEXT'
   | 'NO_DESTINATION'
   | 'GEOCODE_FAILED'
+  | 'ADDRESS_NOT_FOUND'
+  | 'GEOCODE_UPSTREAM_ERROR'
   | 'ROUTE_FAILED'
   | 'SERVER_MISCONFIGURED'
   | 'UNKNOWN'
@@ -71,6 +73,10 @@ function errorMessage(code: LiveAssistErrorCode): string {
       return '다음 일정의 위치 정보가 필요합니다.'
     case 'GEOCODE_FAILED':
       return '목적지 위치를 확인하지 못했습니다.'
+    case 'ADDRESS_NOT_FOUND':
+      return '목적지 주소를 찾지 못했습니다. 지도 검색어를 확인해 주세요.'
+    case 'GEOCODE_UPSTREAM_ERROR':
+      return '위치 검색 서비스에 일시적으로 연결하지 못했습니다.'
     case 'ROUTE_FAILED':
       return '현재 이동시간을 불러오지 못했습니다.'
     case 'SERVER_MISCONFIGURED':
@@ -138,9 +144,13 @@ export function useLiveTravelAssistant(
       const originLat = position.coords.latitude
       const originLng = position.coords.longitude
 
-      const geo = await resolveGeocode(destination)
-      if (!geo) {
-        setErrorCode('GEOCODE_FAILED')
+      const geo = await resolveGeocodeDetailed(destination)
+      if (!geo.ok) {
+        if (geo.error === 'SERVER_MISCONFIGURED') setErrorCode('SERVER_MISCONFIGURED')
+        else if (geo.error === 'ADDRESS_NOT_FOUND') setErrorCode('ADDRESS_NOT_FOUND')
+        else if (geo.error === 'GEOCODE_UPSTREAM_ERROR')
+          setErrorCode('GEOCODE_UPSTREAM_ERROR')
+        else setErrorCode('GEOCODE_FAILED')
         setSnapshot(null)
         return
       }

@@ -1,33 +1,17 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { fetchKakaoJson, getKakaoRestApiKey } from './_lib/kakao'
+const { fetchKakaoJson, getKakaoRestApiKey } = require('./_lib/kakao')
 
-type KakaoDoc = {
-  y?: string
-  x?: string
-  address_name?: string
-  place_name?: string
-}
-
-type KakaoSearchResponse = {
-  documents?: KakaoDoc[]
-}
-
-function firstCoords(data: unknown): {
-  lat: number
-  lng: number
-  addressName: string
-} | null {
-  const docs = (data as KakaoSearchResponse | null)?.documents
+function firstCoords(data) {
+  const docs = data && data.documents
   if (!Array.isArray(docs) || docs.length === 0) return null
   const doc = docs[0]
   const lat = Number(doc.y)
   const lng = Number(doc.x)
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
-  const addressName = (doc.address_name || doc.place_name || '').trim()
+  const addressName = String(doc.address_name || doc.place_name || '').trim()
   return { lat, lng, addressName }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET')
     return res.status(405).json({ ok: false, error: 'METHOD_NOT_ALLOWED' })
@@ -53,7 +37,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       new URLSearchParams({ query: address, size: '1' }).toString()
     const addressResult = await fetchKakaoJson(addressUrl, apiKey)
     if (!addressResult.ok) {
-      return res.status(502).json({ ok: false, error: 'GEOCODE_UPSTREAM_ERROR' })
+      return res.status(502).json({
+        ok: false,
+        error: 'GEOCODE_UPSTREAM_ERROR',
+        upstreamStatus: addressResult.status,
+      })
     }
 
     let coords = firstCoords(addressResult.data)
@@ -64,7 +52,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         new URLSearchParams({ query: address, size: '1' }).toString()
       const keywordResult = await fetchKakaoJson(keywordUrl, apiKey)
       if (!keywordResult.ok) {
-        return res.status(502).json({ ok: false, error: 'GEOCODE_UPSTREAM_ERROR' })
+        return res.status(502).json({
+          ok: false,
+          error: 'GEOCODE_UPSTREAM_ERROR',
+          upstreamStatus: keywordResult.status,
+        })
       }
       coords = firstCoords(keywordResult.data)
     }

@@ -1,24 +1,13 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { fetchKakaoJson, getKakaoRestApiKey } from './_lib/kakao'
+const { fetchKakaoJson, getKakaoRestApiKey } = require('./_lib/kakao')
 
-type KakaoRouteResponse = {
-  routes?: Array<{
-    result_code?: number
-    summary?: {
-      duration?: number
-      distance?: number
-    }
-  }>
-}
-
-function parseCoord(value: unknown, min: number, max: number): number | null {
+function parseCoord(value, min, max) {
   if (typeof value !== 'string' && typeof value !== 'number') return null
   const num = Number(value)
   if (!Number.isFinite(num) || num < min || num > max) return null
   return num
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET')
     return res.status(405).json({ ok: false, error: 'METHOD_NOT_ALLOWED' })
@@ -44,7 +33,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Kakao Mobility uses x=longitude, y=latitude
     const params = new URLSearchParams({
       origin: `${originLng},${originLat}`,
       destination: `${destLng},${destLat}`,
@@ -57,10 +45,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const url = `https://apis-navi.kakaomobility.com/v1/directions?${params.toString()}`
     const result = await fetchKakaoJson(url, apiKey)
     if (!result.ok) {
-      return res.status(502).json({ ok: false, error: 'ROUTE_UPSTREAM_ERROR' })
+      return res.status(502).json({
+        ok: false,
+        error: 'ROUTE_UPSTREAM_ERROR',
+        upstreamStatus: result.status,
+      })
     }
 
-    const routes = (result.data as KakaoRouteResponse | null)?.routes
+    const routes = result.data && result.data.routes
     const route = Array.isArray(routes) ? routes[0] : null
     if (!route || route.result_code !== 0 || !route.summary) {
       return res.status(502).json({ ok: false, error: 'ROUTE_NOT_FOUND' })
